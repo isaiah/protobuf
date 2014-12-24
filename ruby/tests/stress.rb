@@ -1,9 +1,10 @@
-#!/usr/bin/ruby
+$:.unshift(File.expand_path('../../lib', __FILE__))
 
 require 'google/protobuf'
-require 'test/unit'
+require 'benchmark'
+require 'minitest/autorun'
 
-module StressTest
+class StressTest < MiniTest::Unit::TestCase
   pool = Google::Protobuf::DescriptorPool.new
   pool.build do
     add_message "TestMessage" do
@@ -18,20 +19,28 @@ module StressTest
   TestMessage = pool.lookup("TestMessage").msgclass
   M = pool.lookup("M").msgclass
 
-  class StressTest < Test::Unit::TestCase
-    def get_msg
-      TestMessage.new(:a => 1000,
-                      :b => [M.new(:foo => "hello"),
-                             M.new(:foo => "world")])
+  def setup
+    @m = TestMessage.new(:a => 1000,
+                         :b => [M.new(:foo => "hello"),
+                               M.new(:foo => "world")])
+  end
+
+  def test_stress
+    data = TestMessage.encode(@m)
+    n = 100_000
+    encode_decode = proc do
+      mnew = TestMessage.decode(data)
+      mnew = mnew.dup
+      assert_equal mnew.inspect, @m.inspect
+      assert_equal TestMessage.encode(mnew), data
     end
-    def test_stress
-      m = get_msg
-      data = TestMessage.encode(m)
-      100_000.times do
-        mnew = TestMessage.decode(data)
-        mnew = mnew.dup
-        assert mnew.inspect == m.inspect
-        assert TestMessage.encode(mnew) == data
+
+    # warmup
+    n.times(&encode_decode)
+
+    Benchmark.bm do |x|
+      x.report do
+        n.times(&encode_decode)
       end
     end
   end

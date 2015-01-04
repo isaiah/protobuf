@@ -437,7 +437,7 @@ public class RubyMessage extends RubyObject {
                 return msg.buildFrom((DynamicMessage) value);
             case ENUM:
                 Descriptors.EnumValueDescriptor enumValueDescriptor = (Descriptors.EnumValueDescriptor) value;
-                if (enumValueDescriptor.getIndex() == -1) { // KNOWN ENUM VALUE
+                if (enumValueDescriptor.getIndex() == -1) { // UNKNOWN ENUM VALUE
                   return runtime.newFixnum(enumValueDescriptor.getNumber());
                 }
                 return runtime.newSymbol(enumValueDescriptor.getName());

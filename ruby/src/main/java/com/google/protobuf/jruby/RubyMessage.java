@@ -93,7 +93,7 @@ public class RubyMessage extends RubyObject {
     @JRubyMethod
     public IRubyObject inspect() {
         String cname = metaClass.getName();
-        StringBuilder sb = new StringBuilder("#<");
+        StringBuilder sb = new StringBuilder("<");
         sb.append(cname);
         sb.append(": ");
         sb.append(this.layoutInspect());

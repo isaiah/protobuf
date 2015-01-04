@@ -399,7 +399,7 @@ public class RubyMessage extends RubyObject {
                 Descriptors.EnumDescriptor enumDescriptor = fieldDescriptor.getEnumType();
 
                 if (Utils.isRubyNum(value)) {
-                    val = enumDescriptor.findValueByNumber((int) value.convertToInteger().getLongValue());
+                    val = enumDescriptor.findValueByNumberCreatingIfUnknown(RubyNumeric.num2int(value));
                 } else if (value instanceof RubySymbol) {
                     val = enumDescriptor.findValueByName(value.asJavaString());
                 } else {
@@ -436,7 +436,11 @@ public class RubyMessage extends RubyObject {
                 RubyMessage msg = (RubyMessage) typeClass.newInstance(context, Block.NULL_BLOCK);
                 return msg.buildFrom((DynamicMessage) value);
             case ENUM:
-                return runtime.newSymbol(((Descriptors.EnumValueDescriptor) value).getName());
+                Descriptors.EnumValueDescriptor enumValueDescriptor = (Descriptors.EnumValueDescriptor) value;
+                if (enumValueDescriptor.getIndex() == -1) { // KNOWN ENUM VALUE
+                  return runtime.newFixnum(enumValueDescriptor.getNumber());
+                }
+                return runtime.newSymbol(enumValueDescriptor.getName());
             default:
                 return runtime.newString(value.toString());
         }

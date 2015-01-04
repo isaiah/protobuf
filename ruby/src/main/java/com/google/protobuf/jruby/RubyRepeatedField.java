@@ -72,13 +72,13 @@ public class RubyRepeatedField extends RubyObject {
 
     @JRubyMethod(name = "[]=")
     public IRubyObject indexSet(ThreadContext context, IRubyObject index, IRubyObject value) {
-        this.storage.set((int) index.convertToInteger().getLongValue(), value);
+        this.storage.set(RubyNumeric.num2int(index), value);
         return context.runtime.getNil();
     }
 
     @JRubyMethod(name = "[]")
     public IRubyObject index(ThreadContext context, IRubyObject index) {
-        return this.storage.eltInternal((int) index.convertToInteger().getLongValue());
+        return this.storage.eltInternal(RubyNumeric.num2int(index));
     }
 
     /*

@@ -54,16 +54,14 @@ public class Utils {
                 }
                 break;
             case ENUM:
-                Descriptors.EnumDescriptor enumDescriptor = ((RubyEnumDescriptor) typeClass.getInstanceVariable("@descriptor")).getDescriptor();
-                if (isRubyNum(value)) {
-                    val = enumDescriptor.findValueByNumber((int) value.convertToInteger().getLongValue());
-                } else if (value instanceof RubySymbol) {
+                if (value instanceof RubySymbol) {
+                    Descriptors.EnumDescriptor enumDescriptor = ((RubyEnumDescriptor) typeClass.getInstanceVariable("@descriptor")).getDescriptor();
                     val = enumDescriptor.findValueByName(value.asJavaString());
-                } else {
+                    if (val == null)
+                        throw runtime.newNameError("Enum value " + value + " is not found.", enumDescriptor.getName());
+                } else if(!isRubyNum(value)) {
                     throw runtime.newTypeError("Expected number or symbol type for enum field.");
                 }
-                if (val == null)
-                    throw runtime.newNameError("Enum value " + value + " is not found.", enumDescriptor.getName());
                 break;
             default:
                 break;

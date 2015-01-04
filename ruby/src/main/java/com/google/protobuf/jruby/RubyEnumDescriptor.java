@@ -6,6 +6,7 @@ import org.jruby.Ruby;
 import org.jruby.RubyClass;
 import org.jruby.RubyModule;
 import org.jruby.RubyObject;
+import org.jruby.RubyNumeric;
 import org.jruby.anno.JRubyClass;
 import org.jruby.anno.JRubyMethod;
 import org.jruby.runtime.Block;
@@ -56,7 +57,7 @@ public class RubyEnumDescriptor extends RubyObject {
     public IRubyObject addValue(ThreadContext context, IRubyObject name, IRubyObject number) {
         DescriptorProtos.EnumValueDescriptorProto.Builder valueBuilder = DescriptorProtos.EnumValueDescriptorProto.newBuilder();
         valueBuilder.setName(name.asJavaString());
-        valueBuilder.setNumber((int) number.convertToInteger().getLongValue());
+        valueBuilder.setNumber(RubyNumeric.num2int(number));
         this.builder.addValue(valueBuilder);
         return context.runtime.getNil();
     }

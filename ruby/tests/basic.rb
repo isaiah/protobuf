@@ -335,11 +335,8 @@ class TestProtobuf < MiniTest::Unit::TestCase
     end
     assert_equal :A, l[0]
 
-    # enum value has to be defined in java
-    unless jruby?
-      l.push 4
-      assert_equal 4, l[3]
-    end
+    l.push 4
+    assert_equal 4, l[3]
   end
 
   def test_rptfield_initialize

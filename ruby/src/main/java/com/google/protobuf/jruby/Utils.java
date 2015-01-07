@@ -164,7 +164,7 @@ public class Utils {
 
     public static String BADNAME_REPLACEMENT = "YmFkbmFtZQ"; // badname disguised in base64
 
-    public static String DESCRIPTOR_INSTANCE_VAR = "descriptor";
+    public static String DESCRIPTOR_INSTANCE_VAR = "@descriptor";
 
     public static String EQUAL_SIGN = "=";
 

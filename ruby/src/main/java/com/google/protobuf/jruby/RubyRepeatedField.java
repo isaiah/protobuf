@@ -30,38 +30,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Protocol Buffers - Google's data interchange format
- * Copyright 2014 Google Inc.  All rights reserved.
- * https://developers.google.com/protocol-buffers/
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are
- * met:
- *
- *     * Redistributions of source code must retain the above copyright
- * notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above
- * copyright notice, this list of conditions and the following disclaimer
- * in the documentation and/or other materials provided with the
- * distribution.
- *     * Neither the name of Google Inc. nor the names of its
- * contributors may be used to endorse or promote products derived from
- * this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-
 package com.google.protobuf.jruby;
 
 import com.google.protobuf.Descriptors;
@@ -103,7 +71,7 @@ public class RubyRepeatedField extends RubyObject {
         Ruby runtime = context.runtime;
         this.storage = runtime.newArray();
         IRubyObject ary = null;
-        if (! (args[0] instanceof RubySymbol)) {
+        if (!(args[0] instanceof RubySymbol)) {
             throw runtime.newArgumentError("Expected Symbol for type name");
         }
         this.fieldType = Utils.rubyToFieldType(args[0]);
@@ -131,12 +99,26 @@ public class RubyRepeatedField extends RubyObject {
         return this;
     }
 
+    /*
+     * call-seq:
+     *     RepeatedField.[]=(index, value)
+     *
+     * Sets the element at the given index. On out-of-bounds assignments, extends
+     * the array and fills the hole (if any) with default values.
+     */
     @JRubyMethod(name = "[]=")
     public IRubyObject indexSet(ThreadContext context, IRubyObject index, IRubyObject value) {
         this.storage.set(RubyNumeric.num2int(index), value);
         return context.runtime.getNil();
     }
 
+    /*
+     * call-seq:
+     *     RepeatedField.[](index) => value
+     *
+     * Accesses the element at the given index. Throws an exception on out-of-bounds
+     * errors.
+     */
     @JRubyMethod(name = "[]")
     public IRubyObject index(ThreadContext context, IRubyObject index) {
         return this.storage.eltInternal(RubyNumeric.num2int(index));
@@ -168,6 +150,13 @@ public class RubyRepeatedField extends RubyObject {
         return this;
     }
 
+    /*
+     * call-seq:
+     *     RepeatedField.pop => value
+     *
+     * Removes the last element and returns it. Throws an exception if the repeated
+     * field is empty.
+     */
     @JRubyMethod
     public IRubyObject pop(ThreadContext context) {
         IRubyObject ret = this.storage.last();
@@ -175,23 +164,49 @@ public class RubyRepeatedField extends RubyObject {
         return ret;
     }
 
+    /*
+     * call-seq:
+     *     RepeatedField.replace(list)
+     *
+     * Replaces the contents of the repeated field with the given list of elements.
+     */
     @JRubyMethod
     public IRubyObject replace(ThreadContext context, IRubyObject list) {
         this.storage = (RubyArray) list;
         return context.runtime.getNil();
     }
 
+    /*
+     * call-seq:
+     *     RepeatedField.clear
+     *
+     * Clears (removes all elements from) this repeated field.
+     */
     @JRubyMethod
     public IRubyObject clear(ThreadContext context) {
         this.storage.clear();
         return context.runtime.getNil();
     }
 
+    /*
+     * call-seq:
+     *     RepeatedField.length
+     *
+     * Returns the length of this repeated field.
+     */
     @JRubyMethod(name = {"count", "length"})
     public IRubyObject length(ThreadContext context) {
         return context.runtime.newFixnum(this.storage.size());
     }
 
+    /*
+     * call-seq:
+     *     RepeatedField.+(other) => repeated field
+     *
+     * Returns a new repeated field that contains the concatenated list of this
+     * repeated field's elements and other's elements. The other (second) list may
+     * be either another repeated field or a Ruby array.
+     */
     @JRubyMethod(name = "+")
     public IRubyObject plus(ThreadContext context, IRubyObject list) {
         RubyRepeatedField dup = (RubyRepeatedField) dup(context);
@@ -203,18 +218,40 @@ public class RubyRepeatedField extends RubyObject {
         return dup;
     }
 
+    /*
+     * call-seq:
+     *     RepeatedField.hash => hash_value
+     *
+     * Returns a hash value computed from this repeated field's elements.
+     */
     @JRubyMethod
     public IRubyObject hash(ThreadContext context) {
         int hashCode = System.identityHashCode(this.storage);
-        return context.runtime.newString(Integer.toHexString(hashCode));
+        return context.runtime.newFixnum(hashCode);
     }
 
-
+    /*
+     * call-seq:
+     *     RepeatedField.==(other) => boolean
+     *
+     * Compares this repeated field to another. Repeated fields are equal if their
+     * element types are equal, their lengths are equal, and each element is equal.
+     * Elements are compared as per normal Ruby semantics, by calling their :==
+     * methods (or performing a more efficient comparison for primitive types).
+     */
     @JRubyMethod(name = "==")
     public IRubyObject eq(ThreadContext context, IRubyObject other) {
         return this.toArray(context).op_equal(context, other);
     }
 
+    /*
+     * call-seq:
+     *     RepeatedField.each(&block)
+     *
+     * Invokes the block once for each element of the repeated field. RepeatedField
+     * also includes Enumerable; combined with this method, the repeated field thus
+     * acts like an ordinary Ruby sequence.
+     */
     @JRubyMethod
     public IRubyObject each(ThreadContext context, Block block) {
         this.storage.each(context, block);
@@ -231,6 +268,7 @@ public class RubyRepeatedField extends RubyObject {
         }
         return this.storage;
     }
+
     /*
      * call-seq:
      *     RepeatedField.dup => repeated_field
@@ -247,6 +285,14 @@ public class RubyRepeatedField extends RubyObject {
         return dup;
     }
 
+    /*
+     * call-seq:
+     *     RepeatedField.inspect => string
+     *
+     * Returns a string representing this repeated field's elements. It will be
+     * formated as "[<element>, <element>, ...]", with each element's string
+     * representation computed by its own #inspect method.
+     */
     @JRubyMethod
     public IRubyObject inspect() {
         StringBuilder str = new StringBuilder("[");
@@ -271,7 +317,7 @@ public class RubyRepeatedField extends RubyObject {
 
     protected RubyRepeatedField deepCopy(ThreadContext context) {
         RubyRepeatedField copy = new RubyRepeatedField(context.runtime, metaClass, fieldType, typeClass);
-        for (int i=0; i<size(); i++) {
+        for (int i = 0; i < size(); i++) {
             IRubyObject value = storage.eltInternal(i);
             if (fieldType == Descriptors.FieldDescriptor.Type.MESSAGE) {
                 copy.storage.add(((RubyMessage) value).deepCopy(context));
@@ -325,7 +371,7 @@ public class RubyRepeatedField extends RubyObject {
 
     private void validateTypeClass(Descriptors.FieldDescriptor.Type fieldType, IRubyObject typeClass) {
         Ruby runtime = getRuntime();
-        if (! typeClass.getInstanceVariables().hasInstanceVariable(Utils.DESCRIPTOR_INSTANCE_VAR))
+        if (!typeClass.getInstanceVariables().hasInstanceVariable(Utils.DESCRIPTOR_INSTANCE_VAR))
             throw runtime.newArgumentError("Type class has no descriptor. Please pass a class or enum as returned by" +
                     " the descriptor pool");
     }

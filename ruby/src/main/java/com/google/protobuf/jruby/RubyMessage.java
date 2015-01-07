@@ -30,38 +30,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Protocol Buffers - Google's data interchange format
- * Copyright 2014 Google Inc.  All rights reserved.
- * https://developers.google.com/protocol-buffers/
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are
- * met:
- *
- *     * Redistributions of source code must retain the above copyright
- * notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above
- * copyright notice, this list of conditions and the following disclaimer
- * in the documentation and/or other materials provided with the
- * distribution.
- *     * Neither the name of Google Inc. nor the names of its
- * contributors may be used to endorse or promote products derived from
- * this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-
 package com.google.protobuf.jruby;
 
 import com.google.protobuf.ByteString;
@@ -88,6 +56,18 @@ public class RubyMessage extends RubyObject {
         this.descriptor = descriptor;
     }
 
+    /*
+     * call-seq:
+     *     Message.new(kwargs) => new_message
+     *
+     * Creates a new instance of the given message class. Keyword arguments may be
+     * provided with keywords corresponding to field names.
+     *
+     * Note that no literal Message class exists. Only concrete classes per message
+     * type exist, as provided by the #msgclass method on Descriptors after they
+     * have been added to a pool. The method definitions described here on the
+     * Message class are provided on each concrete message class.
+     */
     @JRubyMethod(optional = 1)
     public IRubyObject initialize(final ThreadContext context, IRubyObject[] args) {
         final Ruby runtime = context.runtime;
@@ -137,6 +117,13 @@ public class RubyMessage extends RubyObject {
         return setField(context, fieldDescriptor, value);
     }
 
+    /*
+     * call-seq:
+     *     Message.[](index) => value
+     *
+     * Accesses a field's value by field name. The provided field name should be a
+     * string.
+     */
     @JRubyMethod(name = "[]")
     public IRubyObject index(ThreadContext context, IRubyObject fieldName) {
         Descriptors.FieldDescriptor fieldDescriptor = findField(context, fieldName);
@@ -163,12 +150,27 @@ public class RubyMessage extends RubyObject {
         return getRuntime().newString(sb.toString());
     }
 
+    /*
+     * call-seq:
+     *     Message.hash => hash_value
+     *
+     * Returns a hash value that represents this message's field values.
+     */
     @JRubyMethod
     public IRubyObject hash(ThreadContext context) {
         int hashCode = System.identityHashCode(this);
-        return context.runtime.newString(Integer.toHexString(hashCode));
+        return context.runtime.newFixnum(hashCode);
     }
 
+    /*
+     * call-seq:
+     *     Message.==(other) => boolean
+     *
+     * Performs a deep comparison of this message with another. Messages are equal
+     * if they have the same type and if each field is equal according to the :==
+     * method's semantics (a more efficient comparison may actually be done if the
+     * field is of a primitive type).
+     */
     @JRubyMethod(name = "==")
     public IRubyObject eq(ThreadContext context, IRubyObject other) {
         Ruby runtime = context.runtime;
@@ -190,6 +192,19 @@ public class RubyMessage extends RubyObject {
         return runtime.getTrue();
     }
 
+    /*
+     * call-seq:
+     *     Message.method_missing(*args)
+     *
+     * Provides accessors and setters for message fields according to their field
+     * names. For any field whose name does not conflict with a built-in method, an
+     * accessor is provided with the same name as the field, and a setter is
+     * provided with the name of the field plus the '=' suffix. Thus, given a
+     * message instance 'msg' with field 'foo', the following code is valid:
+     *
+     *     msg.foo = 42
+     *     puts msg.foo
+     */
     @JRubyMethod(name = "method_missing", rest = true)
     public IRubyObject methodMissing(ThreadContext context, IRubyObject[] args) {
         if (args.length == 1) {
@@ -499,7 +514,7 @@ public class RubyMessage extends RubyObject {
             case ENUM:
                 Descriptors.EnumValueDescriptor enumValueDescriptor = (Descriptors.EnumValueDescriptor) value;
                 if (enumValueDescriptor.getIndex() == -1) { // UNKNOWN ENUM VALUE
-                  return runtime.newFixnum(enumValueDescriptor.getNumber());
+                    return runtime.newFixnum(enumValueDescriptor.getNumber());
                 }
                 return runtime.newSymbol(enumValueDescriptor.getName());
             default:

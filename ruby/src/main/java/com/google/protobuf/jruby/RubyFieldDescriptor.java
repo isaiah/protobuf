@@ -30,38 +30,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Protocol Buffers - Google's data interchange format
- * Copyright 2014 Google Inc.  All rights reserved.
- * https://developers.google.com/protocol-buffers/
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are
- * met:
- *
- *     * Redistributions of source code must retain the above copyright
- * notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above
- * copyright notice, this list of conditions and the following disclaimer
- * in the documentation and/or other materials provided with the
- * distribution.
- *     * Neither the name of Google Inc. nor the names of its
- * contributors may be used to endorse or promote products derived from
- * this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-
 package com.google.protobuf.jruby;
 
 import com.google.protobuf.DescriptorProtos;
@@ -90,12 +58,26 @@ public class RubyFieldDescriptor extends RubyObject {
         super(runtime, klazz);
     }
 
+    /*
+     * call-seq:
+     *     FieldDescriptor.new => field
+     *
+     * Returns a new field descriptor. Its name, type, etc. must be set before it is
+     * added to a message type.
+     */
     @JRubyMethod
     public IRubyObject initialize(ThreadContext context) {
         builder = DescriptorProtos.FieldDescriptorProto.newBuilder();
         return this;
     }
 
+    /*
+     * call-seq:
+     *     FieldDescriptor.label = label
+     *
+     * Sets the label on this field. Cannot be called if field is part of a message
+     * type already in a pool.
+     */
     @JRubyMethod(name = "label=")
     public IRubyObject setLabel(ThreadContext context, IRubyObject value) {
         this.builder.setLabel(
@@ -103,6 +85,12 @@ public class RubyFieldDescriptor extends RubyObject {
         return context.runtime.getNil();
     }
 
+    /*
+     * call-seq:
+     *     FieldDescriptor.name => name
+     *
+     * Returns the name of this field.
+     */
     @JRubyMethod(name = "name")
     public IRubyObject getName(ThreadContext context) {
         return this.name;
@@ -113,6 +101,13 @@ public class RubyFieldDescriptor extends RubyObject {
         return subType;
     }
 
+    /*
+     * call-seq:
+     *     FieldDescriptor.name = name
+     *
+     * Sets the name of this field. Cannot be called once the containing message
+     * type, if any, is added to a pool.
+     */
     @JRubyMethod(name = "name=")
     public IRubyObject setName(ThreadContext context, IRubyObject value) {
         String nameStr = value.asJavaString();
@@ -121,24 +116,58 @@ public class RubyFieldDescriptor extends RubyObject {
         return context.runtime.getNil();
     }
 
+    /*
+     * call-seq:
+     *     FieldDescriptor.type => type
+     *
+     * Returns this field's type, as a Ruby symbol, or nil if not yet set.
+     *
+     * Valid field types are:
+     *     :int32, :int64, :uint32, :uint64, :float, :double, :bool, :string,
+     *     :bytes, :message.
+     */
     @JRubyMethod(name = "type")
     public IRubyObject getType(ThreadContext context) {
         String typeName = this.builder.getType().name();
         return context.runtime.newSymbol(typeName.replace("TYPE_", "").toLowerCase());
     }
 
+    /*
+     * call-seq:
+     *     FieldDescriptor.type = type
+     *
+     * Sets this field's type. Cannot be called if field is part of a message type
+     * already in a pool.
+     */
     @JRubyMethod(name = "type=")
     public IRubyObject setType(ThreadContext context, IRubyObject value) {
         this.builder.setType(DescriptorProtos.FieldDescriptorProto.Type.valueOf("TYPE_" + value.asJavaString().toUpperCase()));
         return context.runtime.getNil();
     }
 
+    /*
+     * call-seq:
+     *     FieldDescriptor.number = number
+     *
+     * Sets the tag number for this field. Cannot be called if field is part of a
+     * message type already in a pool.
+     */
     @JRubyMethod(name = "number=")
     public IRubyObject setNumber(ThreadContext context, IRubyObject value) {
         this.builder.setNumber(RubyNumeric.num2int(value));
         return context.runtime.getNil();
     }
 
+    /*
+     * call-seq:
+     *     FieldDescriptor.submsg_name = submsg_name
+     *
+     * Sets the name of the message or enum type corresponding to this field, if it
+     * is a message or enum field (respectively). This type name will be resolved
+     * within the context of the pool to which the containing message type is added.
+     * Cannot be called on field that are not of message or enum type, or on fields
+     * that are part of a message type already added to a pool.
+     */
     @JRubyMethod(name = "submsg_name=")
     public IRubyObject setSubmsgName(ThreadContext context, IRubyObject value) {
         this.builder.setTypeName(value.asJavaString());
@@ -160,6 +189,7 @@ public class RubyFieldDescriptor extends RubyObject {
         }
         return message.getField(context, fieldDef);
     }
+
     /*
      * call-seq:
      *     FieldDescriptor.set(message, value)

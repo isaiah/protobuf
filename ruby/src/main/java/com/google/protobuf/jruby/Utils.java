@@ -133,6 +133,7 @@ public class Utils {
             throw value.getRuntime().newRangeError("Integer " + longVal + " too big to convert to 'unsigned int'");
         long num = longVal;
         if (num > Integer.MAX_VALUE || num < Integer.MIN_VALUE)
+            // encode to UINT32
             num = (-longVal ^ (-1l >>> 32) ) + 1;
         RubyNumeric.checkInt(value, num);
         return (int) num;

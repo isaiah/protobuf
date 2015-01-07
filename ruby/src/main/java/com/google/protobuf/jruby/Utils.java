@@ -38,6 +38,8 @@ import org.jruby.*;
 import org.jruby.runtime.ThreadContext;
 import org.jruby.runtime.builtin.IRubyObject;
 
+import java.math.BigInteger;
+
 public class Utils {
     public static Descriptors.FieldDescriptor.Type rubyToFieldType(IRubyObject typeClass) {
         return Descriptors.FieldDescriptor.Type.valueOf(typeClass.asJavaString().toUpperCase());
@@ -109,7 +111,7 @@ public class Utils {
             case UINT64:
                 long ret = (Long) value;
                 return ret >= 0 ? runtime.newFixnum(ret) :
-                        RubyBignum.newBignum(runtime, ((Long) value) + 1.8446744073709552E19); // + Math.pow(2, 64)
+                        RubyBignum.newBignum(runtime, UINT64_COMPLEMENTARY.add(new BigInteger(ret + "")));
             case FLOAT:
                 return runtime.newFloat((Float) value);
             case DOUBLE:
@@ -164,6 +166,8 @@ public class Utils {
     public static String DESCRIPTOR_INSTANCE_VAR = "descriptor";
 
     public static String EQUAL_SIGN = "=";
+
+    private static BigInteger UINT64_COMPLEMENTARY = new BigInteger("18446744073709551616"); //Math.pow(2, 64)
 
     private static long UINT_MAX = 0xffffffffl;
 }

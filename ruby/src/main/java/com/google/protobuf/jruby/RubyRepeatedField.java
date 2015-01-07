@@ -325,7 +325,7 @@ public class RubyRepeatedField extends RubyObject {
 
     private void validateTypeClass(Descriptors.FieldDescriptor.Type fieldType, IRubyObject typeClass) {
         Ruby runtime = getRuntime();
-        if (! typeClass.getInstanceVariables().hasInstanceVariable("@descriptor"))
+        if (! typeClass.getInstanceVariables().hasInstanceVariable(Utils.DESCRIPTOR_INSTANCE_VAR))
             throw runtime.newArgumentError("Type class has no descriptor. Please pass a class or enum as returned by" +
                     " the descriptor pool");
     }

@@ -232,7 +232,7 @@ public class RubyMessage extends RubyObject {
      */
     @JRubyMethod(name = "descriptor", meta = true)
     public static IRubyObject getDescriptor(ThreadContext context, IRubyObject recv) {
-        return ((RubyClass) recv).getInstanceVariable("@descriptor");
+        return ((RubyClass) recv).getInstanceVariable(Utils.DESCRIPTOR_INSTANCE_VAR);
     }
 
     /*
@@ -252,7 +252,7 @@ public class RubyMessage extends RubyObject {
     public static IRubyObject decode(ThreadContext context, IRubyObject recv, IRubyObject data) {
         byte[] bin = data.convertToString().getBytes();
         RubyMessage ret = (RubyMessage) ((RubyClass) recv).newInstance(context, Block.NULL_BLOCK);
-        RubyDescriptor rubyDescriptor = (RubyDescriptor) ((RubyClass) recv).getInstanceVariable("@descriptor");
+        RubyDescriptor rubyDescriptor = (RubyDescriptor) ((RubyClass) recv).getInstanceVariable(Utils.DESCRIPTOR_INSTANCE_VAR);
         try {
             DynamicMessage dynamicMessage = DynamicMessage.parseFrom(rubyDescriptor.getDescriptor(), bin);
             ret.buildFrom(dynamicMessage);
@@ -287,7 +287,7 @@ public class RubyMessage extends RubyObject {
     @JRubyMethod(name = "decode_json", meta = true)
     public static IRubyObject decodeJson(ThreadContext context, IRubyObject recv, IRubyObject json) {
         RubyMessage ret = (RubyMessage) ((RubyClass) recv).newInstance(context, Block.NULL_BLOCK);
-        RubyDescriptor rubyDescriptor = (RubyDescriptor) ((RubyClass) recv).getInstanceVariable("@descriptor");
+        RubyDescriptor rubyDescriptor = (RubyDescriptor) ((RubyClass) recv).getInstanceVariable(Utils.DESCRIPTOR_INSTANCE_VAR);
         try {
             DynamicMessage.Builder dynamicMessageBuilder = DynamicMessage.newBuilder(rubyDescriptor.getDescriptor());
             JsonFormat.merge(json.asJavaString(), dynamicMessageBuilder);

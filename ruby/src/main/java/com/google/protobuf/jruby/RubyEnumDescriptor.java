@@ -162,7 +162,7 @@ public class RubyEnumDescriptor extends RubyObject {
             enumModule.defineConstant(value.getName(), runtime.newFixnum(value.getNumber()));
         }
 
-        enumModule.instance_variable_set(runtime.newString("@descriptor"), this);
+        enumModule.instance_variable_set(runtime.newString(Utils.DESCRIPTOR_INSTANCE_VAR), this);
         enumModule.defineAnnotatedMethods(RubyEnum.class);
         return enumModule;
     }

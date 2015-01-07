@@ -116,7 +116,7 @@ public class Utils {
                 break;
             case ENUM:
                 if (value instanceof RubySymbol) {
-                    Descriptors.EnumDescriptor enumDescriptor = ((RubyEnumDescriptor) typeClass.getInstanceVariable("@descriptor")).getDescriptor();
+                    Descriptors.EnumDescriptor enumDescriptor = ((RubyEnumDescriptor) typeClass.getInstanceVariable(DESCRIPTOR_INSTANCE_VAR)).getDescriptor();
                     val = enumDescriptor.findValueByName(value.asJavaString());
                     if (val == null)
                         throw runtime.newNameError("Enum value " + value + " is not found.", enumDescriptor.getName());
@@ -192,6 +192,8 @@ public class Utils {
     }
 
     public static String BADNAME_REPLACEMENT = "YmFkbmFtZQ"; // badname disguised in base64
+
+    public static String DESCRIPTOR_INSTANCE_VAR = "descriptor";
 
     private static long UINT_MAX = 0xffffffffl;
 }

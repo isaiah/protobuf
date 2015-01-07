@@ -99,6 +99,6 @@ public class RubyEnum {
 
     @JRubyMethod(meta = true, name = "descriptor")
     public static IRubyObject getDescriptor(ThreadContext context, IRubyObject recv) {
-        return ((RubyModule)recv).getInstanceVariable("@descriptor");
+        return ((RubyModule)recv).getInstanceVariable(Utils.DESCRIPTOR_INSTANCE_VAR);
     }
 }

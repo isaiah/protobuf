@@ -64,17 +64,38 @@ public class RubyEnumDescriptor extends RubyObject {
         super(runtime, klazz);
     }
 
+    /*
+     * call-seq:
+     *     EnumDescriptor.new => enum_descriptor
+     *
+     * Creates a new, empty, enum descriptor. Must be added to a pool before the
+     * enum type can be used. The enum type may only be modified prior to adding to
+     * a pool.
+     */
     @JRubyMethod
     public IRubyObject initialize(ThreadContext context) {
         this.builder = DescriptorProtos.EnumDescriptorProto.newBuilder();
         return this;
     }
 
+    /*
+     * call-seq:
+     *     EnumDescriptor.name => name
+     *
+     * Returns the name of this enum type.
+     */
     @JRubyMethod(name = "name")
     public IRubyObject getName(ThreadContext context) {
         return this.name;
     }
 
+    /*
+     * call-seq:
+     *     EnumDescriptor.name = name
+     *
+     * Sets the name of this enum type. Cannot be called if the enum type has
+     * already been added to a pool.
+     */
     @JRubyMethod(name = "name=")
     public IRubyObject setName(ThreadContext context, IRubyObject name) {
         this.name = name;
@@ -82,6 +103,14 @@ public class RubyEnumDescriptor extends RubyObject {
         return context.runtime.getNil();
     }
 
+    /*
+     * call-seq:
+     *     EnumDescriptor.add_value(key, value)
+     *
+     * Adds a new key => value mapping to this enum type. Key must be given as a
+     * Ruby symbol. Cannot be called if the enum type has already been added to a
+     * pool. Will raise an exception if the key or value is already in use.
+     */
     @JRubyMethod(name = "add_value")
     public IRubyObject addValue(ThreadContext context, IRubyObject name, IRubyObject number) {
         DescriptorProtos.EnumValueDescriptorProto.Builder valueBuilder = DescriptorProtos.EnumValueDescriptorProto.newBuilder();
@@ -91,6 +120,13 @@ public class RubyEnumDescriptor extends RubyObject {
         return context.runtime.getNil();
     }
 
+    /*
+     * call-seq:
+     *     EnumDescriptor.each(&block)
+     *
+     * Iterates over key => value mappings in this enum's definition, yielding to
+     * the block with (key, value) arguments for each one.
+     */
     @JRubyMethod
     public IRubyObject each(ThreadContext context, Block block) {
         Ruby runtime = context.runtime;
@@ -101,6 +137,13 @@ public class RubyEnumDescriptor extends RubyObject {
         return runtime.getNil();
     }
 
+    /*
+     * call-seq:
+     *     EnumDescriptor.enummodule => module
+     *
+     * Returns the Ruby module corresponding to this enum type. Cannot be called
+     * until the enum descriptor has been added to a pool.
+     */
     @JRubyMethod
     public IRubyObject enummodule(ThreadContext context) {
         if (this.klazz == null) {
@@ -126,7 +169,7 @@ public class RubyEnumDescriptor extends RubyObject {
         Utils.checkNameAvailability(context, name.asJavaString());
 
         RubyModule enumModule = RubyModule.newModule(runtime);
-        for (Descriptors.EnumValueDescriptor value: descriptor.getValues()) {
+        for (Descriptors.EnumValueDescriptor value : descriptor.getValues()) {
             enumModule.defineConstant(value.getName(), runtime.newFixnum(value.getNumber()));
         }
 

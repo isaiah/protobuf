@@ -163,5 +163,7 @@ public class Utils {
 
     public static String DESCRIPTOR_INSTANCE_VAR = "descriptor";
 
+    public static String EQUAL_SIGN = "=";
+
     private static long UINT_MAX = 0xffffffffl;
 }

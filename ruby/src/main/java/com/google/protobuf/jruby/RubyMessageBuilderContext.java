@@ -79,7 +79,7 @@ public class RubyMessageBuilderContext extends RubyObject {
         IRubyObject typeClass = runtime.getNil();
         if (args.length > 3) typeClass = args[3];
         msgdefAddField(context, "optional", args[0], args[1], args[2], typeClass);
-        return this;
+        return context.runtime.getNil();
     }
 
     /*
@@ -100,7 +100,7 @@ public class RubyMessageBuilderContext extends RubyObject {
         IRubyObject typeClass = context.runtime.getNil();
         if (args.length > 3) typeClass = args[3];
         msgdefAddField(context, "required", args[0], args[1], args[2], typeClass);
-        return this;
+        return context.runtime.getNil();
     }
 
     /*
@@ -117,7 +117,7 @@ public class RubyMessageBuilderContext extends RubyObject {
         IRubyObject typeClass = context.runtime.getNil();
         if (args.length > 3) typeClass = args[3];
         msgdefAddField(context, "repeated", args[0], args[1], args[2], typeClass);
-        return this;
+        return context.runtime.getNil();
     }
 
     private void msgdefAddField(ThreadContext context, String label, IRubyObject name, IRubyObject type, IRubyObject number, IRubyObject typeClass) {

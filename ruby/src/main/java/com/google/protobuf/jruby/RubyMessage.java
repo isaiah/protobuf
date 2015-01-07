@@ -212,8 +212,9 @@ public class RubyMessage extends RubyObject {
         } else {
             // fieldName is RubySymbol
             RubyString field = args[0].asString();
-            if (field.end_with_p(context, context.runtime.newString("=")).isTrue()) {
-                field.chomp_bang(context, context.runtime.newString("="));
+            RubyString equalSign = context.runtime.newString(Utils.EQUAL_SIGN);
+            if (field.end_with_p(context, equalSign).isTrue()) {
+                field.chomp_bang(context, equalSign);
             }
             return this.indexSet(context, field, args[1]);
         }
@@ -263,6 +264,14 @@ public class RubyMessage extends RubyObject {
         return context.runtime.newString(new ByteList(rbVal.build(context).toByteArray()));
     }
 
+    /*
+     * call-seq:
+     *     MessageClass.decode(data) => message
+     *
+     * Decodes the given data (as a string containing bytes in protocol buffers wire
+     * format) under the interpretration given by this message class's definition
+     * and returns a message object with the corresponding field values.
+     */
     @JRubyMethod(meta = true)
     public static IRubyObject decode(ThreadContext context, IRubyObject recv, IRubyObject data) {
         byte[] bin = data.convertToString().getBytes();
@@ -272,8 +281,7 @@ public class RubyMessage extends RubyObject {
             DynamicMessage dynamicMessage = DynamicMessage.parseFrom(rubyDescriptor.getDescriptor(), bin);
             ret.buildFrom(dynamicMessage);
         } catch (InvalidProtocolBufferException e) {
-            e.printStackTrace(context.runtime.getOutputStream());
-            return context.runtime.getNil();
+            throw context.runtime.newRuntimeError(e.getMessage());
         }
         return ret;
     }
@@ -308,8 +316,7 @@ public class RubyMessage extends RubyObject {
             JsonFormat.merge(json.asJavaString(), dynamicMessageBuilder);
             ret.buildFrom(dynamicMessageBuilder.build());
         } catch (JsonFormat.ParseException e) {
-            e.printStackTrace(context.runtime.getOutputStream());
-            return context.runtime.getNil();
+            throw context.runtime.newRuntimeError(e.getMessage());
         }
         return ret;
     }
@@ -460,7 +467,7 @@ public class RubyMessage extends RubyObject {
                             break;
                         }
                         throw runtime.newTypeError("Encoding for string fields" +
-                                " must be \"UTF-8 or ASCII\", but was " + str.getEncoding());
+                                " must be \"UTF-8\" or \"ASCII\", but was " + str.getEncoding());
                     default:
                         break;
                 }

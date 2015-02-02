@@ -230,7 +230,7 @@ class TestProtobuf < MiniTest::Unit::TestCase
     assert_equal 0, l.count
     l = Google::Protobuf::RepeatedField.new(:int32, [1, 2, 3])
     assert_equal 3, l.count
-    assert_equal l, [1, 2, 3]
+    assert_equal [1, 2, 3], l
     l.push 4
     assert_equal [1, 2, 3, 4], l
     dst_list = []
@@ -393,10 +393,10 @@ class TestProtobuf < MiniTest::Unit::TestCase
       assert m.length == 0
       assert m == {}
 
-      assert_raise TypeError do
+      assert_raises TypeError do
         m[1] = 1
       end
-      assert_raise RangeError do
+      assert_raises RangeError do
         m["asdf"] = 0x1_0000_0000
       end
     end
@@ -411,56 +411,56 @@ class TestProtobuf < MiniTest::Unit::TestCase
       m = Google::Protobuf::Map.new(:int32, :int32)
       m[1] = 42
       m[-1] = 42
-      assert_raise RangeError do
+      assert_raises RangeError do
         m[0x8000_0000] = 1
       end
-      assert_raise TypeError do
+      assert_raises TypeError do
         m["asdf"] = 1
       end
 
       m = Google::Protobuf::Map.new(:int64, :int32)
       m[0x1000_0000_0000_0000] = 1
-      assert_raise RangeError do
+      assert_raises RangeError do
         m[0x1_0000_0000_0000_0000] = 1
       end
-      assert_raise TypeError do
+      assert_raises TypeError do
         m["asdf"] = 1
       end
 
       m = Google::Protobuf::Map.new(:uint32, :int32)
       m[0x8000_0000] = 1
-      assert_raise RangeError do
+      assert_raises RangeError do
         m[0x1_0000_0000] = 1
       end
-      assert_raise RangeError do
+      assert_raises RangeError do
         m[-1] = 1
       end
 
       m = Google::Protobuf::Map.new(:uint64, :int32)
       m[0x8000_0000_0000_0000] = 1
-      assert_raise RangeError do
+      assert_raises RangeError do
         m[0x1_0000_0000_0000_0000] = 1
       end
-      assert_raise RangeError do
+      assert_raises RangeError do
         m[-1] = 1
       end
 
       m = Google::Protobuf::Map.new(:bool, :int32)
       m[true] = 1
       m[false] = 2
-      assert_raise TypeError do
+      assert_raises TypeError do
         m[1] = 1
       end
-      assert_raise TypeError do
+      assert_raises TypeError do
         m["asdf"] = 1
       end
 
       m = Google::Protobuf::Map.new(:string, :int32)
       m["asdf"] = 1
-      assert_raise TypeError do
+      assert_raises TypeError do
         m[1] = 1
       end
-      assert_raise TypeError do
+      assert_raises TypeError do
         bytestring = ["FFFF"].pack("H*")
         m[bytestring] = 1
       end
@@ -468,10 +468,10 @@ class TestProtobuf < MiniTest::Unit::TestCase
       m = Google::Protobuf::Map.new(:bytes, :int32)
       bytestring = ["FFFF"].pack("H*")
       m[bytestring] = 1
-      assert_raise TypeError do
+      assert_raises TypeError do
         m["asdf"] = 1
       end
-      assert_raise TypeError do
+      assert_raises TypeError do
         m[1] = 1
       end
     end
@@ -479,7 +479,7 @@ class TestProtobuf < MiniTest::Unit::TestCase
     def test_map_msg_enum_valuetypes
       m = Google::Protobuf::Map.new(:string, :message, TestMessage)
       m["asdf"] = TestMessage.new
-      assert_raise TypeError do
+      assert_raises TypeError do
         m["jkl;"] = TestMessage2.new
       end
 
@@ -498,10 +498,10 @@ class TestProtobuf < MiniTest::Unit::TestCase
       assert m["z"] == :B
       m["z"] = 4
       assert m["z"] == 4
-      assert_raise RangeError do
+      assert_raises RangeError do
         m["z"] = :Z
       end
-      assert_raise TypeError do
+      assert_raises TypeError do
         m["z"] = "z"
       end
     end
@@ -546,21 +546,21 @@ class TestProtobuf < MiniTest::Unit::TestCase
       m.map_string_msg.delete("c")
       assert m.map_string_msg == { "a" => TestMessage2.new(:foo => 1) }
 
-      assert_raise TypeError do
+      assert_raises TypeError do
         m.map_string_msg["e"] = TestMessage.new # wrong value type
       end
       # ensure nothing was added by the above
       assert m.map_string_msg == { "a" => TestMessage2.new(:foo => 1) }
 
       m.map_string_int32 = Google::Protobuf::Map.new(:string, :int32)
-      assert_raise TypeError do
+      assert_raises TypeError do
         m.map_string_int32 = Google::Protobuf::Map.new(:string, :int64)
       end
-      assert_raise TypeError do
+      assert_raises TypeError do
         m.map_string_int32 = {}
       end
 
-      assert_raise TypeError do
+      assert_raises TypeError do
         m = MapMessage.new(:map_string_int32 => { 1 => "I am not a number" })
       end
     end

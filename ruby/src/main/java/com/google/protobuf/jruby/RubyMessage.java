@@ -88,11 +88,7 @@ public class RubyMessage extends RubyObject {
                     if (fieldDescriptor.isRepeated()) {
                         if (!(value instanceof RubyArray))
                             throw runtime.newTypeError("Expected array as initializer var for repeated field.");
-                        RubyArray arr = value.convertToArray();
-                        RubyRepeatedField repeatedField = repeatedFieldForFieldDescriptor(context, fieldDescriptor);
-                        for (int i = 0; i < arr.size(); i++) {
-                            repeatedField.push(context, arr.eltInternal(i));
-                        }
+                        RubyRepeatedField repeatedField = rubyToRepeatedField(context, fieldDescriptor, value);
                         addRepeatedField(fieldDescriptor, repeatedField);
                     } else {
                         builder.setField(fieldDescriptor, convert(context, fieldDescriptor, value));
@@ -233,7 +229,6 @@ public class RubyMessage extends RubyObject {
                 dup.addRepeatedField(fdef, this.getRepeatedField(context, fdef));
             } else {
                 dup.builder.setField(fdef, this.builder.getField(fdef));
-
             }
         }
         return dup;
@@ -279,7 +274,7 @@ public class RubyMessage extends RubyObject {
         RubyDescriptor rubyDescriptor = (RubyDescriptor) ((RubyClass) recv).getInstanceVariable(Utils.DESCRIPTOR_INSTANCE_VAR);
         try {
             DynamicMessage dynamicMessage = DynamicMessage.parseFrom(rubyDescriptor.getDescriptor(), bin);
-            ret.buildFrom(dynamicMessage);
+            ret.buildFrom(context, dynamicMessage);
         } catch (InvalidProtocolBufferException e) {
             throw context.runtime.newRuntimeError(e.getMessage());
         }
@@ -314,7 +309,7 @@ public class RubyMessage extends RubyObject {
         try {
             DynamicMessage.Builder dynamicMessageBuilder = DynamicMessage.newBuilder(rubyDescriptor.getDescriptor());
             JsonFormat.merge(json.asJavaString(), dynamicMessageBuilder);
-            ret.buildFrom(dynamicMessageBuilder.build());
+            ret.buildFrom(context, dynamicMessageBuilder.build());
         } catch (JsonFormat.ParseException e) {
             throw context.runtime.newRuntimeError(e.getMessage());
         }
@@ -360,7 +355,6 @@ public class RubyMessage extends RubyObject {
         if (this.repeatedFields.containsKey(fieldDescriptor)) {
             return this.repeatedFields.get(fieldDescriptor);
         }
-
         int count = this.builder.getRepeatedFieldCount(fieldDescriptor);
         RubyRepeatedField ret = repeatedFieldForFieldDescriptor(context, fieldDescriptor);
         for (int i = 0; i < count; i++) {
@@ -373,7 +367,7 @@ public class RubyMessage extends RubyObject {
         this.repeatedFields.put(fieldDescriptor, repeatedField);
     }
 
-    private IRubyObject buildFrom(DynamicMessage dynamicMessage) {
+    private IRubyObject buildFrom(ThreadContext context, DynamicMessage dynamicMessage) {
         this.builder.mergeFrom(dynamicMessage);
         return this;
     }
@@ -489,7 +483,7 @@ public class RubyMessage extends RubyObject {
                     throw runtime.newTypeError("Expected number or symbol type for enum field.");
                 }
                 if (val == null) {
-                    throw runtime.newNameError("Enum value " + value + " is not found.", enumDescriptor.getName());
+                    throw runtime.newRangeError("Enum value " + value + " is not found.");
                 }
                 break;
             default:
@@ -517,7 +511,7 @@ public class RubyMessage extends RubyObject {
                 }
                 RubyClass typeClass = (RubyClass) ((RubyDescriptor) getDescriptorForField(context, fieldDescriptor)).msgclass(context);
                 RubyMessage msg = (RubyMessage) typeClass.newInstance(context, Block.NULL_BLOCK);
-                return msg.buildFrom((DynamicMessage) value);
+                return msg.buildFrom(context, (DynamicMessage) value);
             case ENUM:
                 Descriptors.EnumValueDescriptor enumValueDescriptor = (Descriptors.EnumValueDescriptor) value;
                 if (enumValueDescriptor.getIndex() == -1) { // UNKNOWN ENUM VALUE
@@ -554,8 +548,13 @@ public class RubyMessage extends RubyObject {
     protected IRubyObject setField(ThreadContext context, Descriptors.FieldDescriptor fieldDescriptor, IRubyObject value) {
         if (fieldDescriptor.isRepeated()) {
             checkRepeatedFieldType(context, value, fieldDescriptor);
-            RubyRepeatedField repeatedField = (RubyRepeatedField) value;
-            addRepeatedField(fieldDescriptor, repeatedField);
+            if (value instanceof RubyRepeatedField) {
+                addRepeatedField(fieldDescriptor, (RubyRepeatedField) value);
+            } else {
+                RubyArray ary = value.convertToArray();
+                RubyRepeatedField repeatedField = rubyToRepeatedField(context, fieldDescriptor, ary);
+                addRepeatedField(fieldDescriptor, repeatedField);
+            }
         } else {
             this.builder.setField(fieldDescriptor, convert(context, fieldDescriptor, value));
         }
@@ -578,6 +577,16 @@ public class RubyMessage extends RubyObject {
     private IRubyObject getDescriptorForField(ThreadContext context, Descriptors.FieldDescriptor fieldDescriptor) {
         RubyDescriptor thisRbDescriptor = (RubyDescriptor) getDescriptor(context, metaClass);
         return thisRbDescriptor.lookup(fieldDescriptor.getName()).getSubType(context);
+    }
+
+    private RubyRepeatedField rubyToRepeatedField(ThreadContext context,
+                                                  Descriptors.FieldDescriptor fieldDescriptor, IRubyObject value) {
+        RubyArray arr = value.convertToArray();
+        RubyRepeatedField repeatedField = repeatedFieldForFieldDescriptor(context, fieldDescriptor);
+        for (int i = 0; i < arr.size(); i++) {
+            repeatedField.push(context, arr.eltInternal(i));
+        }
+        return repeatedField;
     }
 
     private Descriptors.Descriptor descriptor;

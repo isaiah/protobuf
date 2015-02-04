@@ -57,10 +57,13 @@ module BasicTest
       optional :"a.b", :int32, 3
     end
 
+    # different context
+    unless RUBY_PLATFORM == "java"
     add_message "MapMessage" do
       map :map_string_int32, :string, :int32, 1
       map :map_string_msg, :string, :message, 2, "TestMessage2"
     end
+
     add_message "MapMessageWireEquiv" do
       repeated :map_string_int32, :message, 1, "MapMessageWireEquiv_entry1"
       repeated :map_string_msg, :message, 2, "MapMessageWireEquiv_entry2"
@@ -82,6 +85,7 @@ module BasicTest
         optional :d, :enum, 4, "TestEnum"
       end
     end
+  end # unless jruby?
   end
 
   TestMessage = pool.lookup("TestMessage").msgclass
@@ -90,6 +94,7 @@ module BasicTest
   Recursive2 = pool.lookup("Recursive2").msgclass
   TestEnum = pool.lookup("TestEnum").enummodule
   BadFieldNames = pool.lookup("BadFieldNames").msgclass
+  unless RUBY_PLATFORM == "java"
   MapMessage = pool.lookup("MapMessage").msgclass
   MapMessageWireEquiv = pool.lookup("MapMessageWireEquiv").msgclass
   MapMessageWireEquiv_entry1 =
@@ -97,6 +102,7 @@ module BasicTest
   MapMessageWireEquiv_entry2 =
     pool.lookup("MapMessageWireEquiv_entry2").msgclass
   OneofMessage = pool.lookup("OneofMessage").msgclass
+  end # unless jruby?
 
 # ------------ test cases ---------------
 
@@ -113,7 +119,7 @@ module BasicTest
       assert m.optional_double == 0.0
       assert m.optional_string == ""
       assert m.optional_bytes == ""
-      assert m.optional_msg == nil
+      assert_nil m.optional_msg
       assert m.optional_enum == :Default
     end
 
@@ -160,7 +166,7 @@ module BasicTest
                           :optional_msg => TestMessage2.new,
                           :repeated_string => ["hello", "there", "world"])
       expected = '<BasicTest::TestMessage: optional_int32: -42, optional_int64: 0, optional_uint32: 0, optional_uint64: 0, optional_bool: false, optional_float: 0.0, optional_double: 0.0, optional_string: "", optional_bytes: "", optional_msg: <BasicTest::TestMessage2: foo: 0>, optional_enum: :A, repeated_int32: [], repeated_int64: [], repeated_uint32: [], repeated_uint64: [], repeated_bool: [], repeated_float: [], repeated_double: [], repeated_string: ["hello", "there", "world"], repeated_bytes: [], repeated_msg: [], repeated_enum: []>'
-      assert m.inspect == expected
+      assert_equal expected, m.inspect
     end
 
     def test_hash
@@ -361,6 +367,7 @@ module BasicTest
       end
     end
 
+    unless RUBY_PLATFORM == "java"
     def test_map_basic
       # allowed key types:
       # :int32, :int64, :uint32, :uint64, :bool, :string, :bytes.
@@ -677,6 +684,7 @@ module BasicTest
       assert OneofMessage.encode(d5) == ''
       assert d5.my_oneof == nil
     end
+    end # unless jruby?
 
     def test_enum_field
       m = TestMessage.new
@@ -750,11 +758,11 @@ module BasicTest
                                             TestMessage2.new(:foo => 2)])
       data = TestMessage.encode m
       m2 = TestMessage.decode data
-      assert m == m2
+      assert_equal m, m2
 
       data = Google::Protobuf.encode m
       m2 = Google::Protobuf.decode(TestMessage, data)
-      assert m == m2
+      assert_equal m, m2
     end
 
     def test_def_errors
@@ -788,7 +796,9 @@ module BasicTest
 
       serialized = Recursive1.encode(m)
       m2 = Recursive1.decode(serialized)
-      assert m == m2
+      unless jruby?
+        assert m == m2
+      end
     end
 
     def test_serialize_cycle
@@ -991,6 +1001,11 @@ module BasicTest
       json_text = TestMessage.encode_json(m)
       m2 = TestMessage.decode_json(json_text)
       assert m == m2
+    end
+
+    private
+    def jruby?
+      RUBY_PLATFORM == "java"
     end
   end
 end

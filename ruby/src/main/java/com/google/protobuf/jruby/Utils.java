@@ -89,7 +89,7 @@ public class Utils {
                     Descriptors.EnumDescriptor enumDescriptor = ((RubyEnumDescriptor) typeClass.getInstanceVariable(DESCRIPTOR_INSTANCE_VAR)).getDescriptor();
                     val = enumDescriptor.findValueByName(value.asJavaString());
                     if (val == null)
-                        throw runtime.newNameError("Enum value " + value + " is not found.", enumDescriptor.getName());
+                        throw runtime.newRangeError("Enum value " + value + " is not found.");
                 } else if(!isRubyNum(value)) {
                     throw runtime.newTypeError("Expected number or symbol type for enum field.");
                 }
@@ -117,7 +117,7 @@ public class Utils {
             case DOUBLE:
                 return runtime.newFloat((Double) value);
             case BOOL:
-                return runtime.newBoolean((Boolean) value);
+                return (Boolean) value ? runtime.getTrue() : runtime.getFalse();
             case BYTES:
                 return runtime.newString(((ByteString) value).toStringUtf8());
             case STRING:

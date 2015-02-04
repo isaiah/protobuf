@@ -219,7 +219,8 @@ public class RubyRepeatedField extends RubyObject {
             dup.storage.addAll((RubyArray) list);
         } else {
             RubyRepeatedField repeatedField = (RubyRepeatedField) list;
-            if (!typeClass.equals(repeatedField.typeClass) || ! fieldType.equals(repeatedField.fieldType))
+            if (! fieldType.equals(repeatedField.fieldType) || (typeClass != null && !
+                    typeClass.equals(repeatedField.typeClass)))
                 throw context.runtime.newArgumentError("Attempt to append RepeatedField with different element type.");
             dup.storage.addAll((RubyArray) repeatedField.toArray(context));
         }

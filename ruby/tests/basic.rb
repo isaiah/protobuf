@@ -708,7 +708,7 @@ module BasicTest
       m.repeated_msg.push TestMessage2.new(:foo => 200)
 
       m2 = m.dup
-      assert m == m2
+      assert_equal m, m2
       m.optional_int32 += 1
       assert m != m2
       assert m.repeated_msg[0] == m2.repeated_msg[0]
@@ -719,7 +719,7 @@ module BasicTest
       m = TestMessage.new(:optional_int32 => 42,
                           :repeated_msg => [TestMessage2.new(:foo => 100)])
       m2 = Google::Protobuf.deep_copy(m)
-      assert m == m2
+      assert_equal m, m2
       assert m.repeated_msg == m2.repeated_msg
       assert m.repeated_msg.object_id != m2.repeated_msg.object_id
       assert m.repeated_msg[0].object_id != m2.repeated_msg[0].object_id
@@ -758,6 +758,7 @@ module BasicTest
                                             TestMessage2.new(:foo => 2)])
       data = TestMessage.encode m
       m2 = TestMessage.decode data
+      assert_equal [:A, :B, :C, 100], m2.repeated_enum
       assert_equal m, m2
 
       data = Google::Protobuf.encode m

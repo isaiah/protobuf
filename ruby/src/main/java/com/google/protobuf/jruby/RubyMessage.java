@@ -227,7 +227,7 @@ public class RubyMessage extends RubyObject {
         for (Descriptors.FieldDescriptor fdef : this.descriptor.getFields()) {
             if (fdef.isRepeated()) {
                 dup.addRepeatedField(fdef, this.getRepeatedField(context, fdef));
-            } else {
+            } else if (this.builder.hasField(fdef)) {
                 dup.builder.setField(fdef, this.builder.getField(fdef));
             }
         }
@@ -322,12 +322,8 @@ public class RubyMessage extends RubyObject {
             RubyRepeatedField repeatedField = entry.getValue();
             this.builder.clearField(fieldDescriptor);
             for (int i = 0; i < repeatedField.size(); i++) {
-                IRubyObject item = repeatedField.get(i);
-                if (item instanceof RubyString) {
-                    this.builder.addRepeatedField(fieldDescriptor, item.asJavaString());
-                } else {
-                    this.builder.addRepeatedField(fieldDescriptor, convert(context, fieldDescriptor, item));
-                }
+                Object item = convert(context, fieldDescriptor, repeatedField.get(i));
+                this.builder.addRepeatedField(fieldDescriptor, item);
             }
         }
         return this.builder.build();
@@ -343,9 +339,8 @@ public class RubyMessage extends RubyObject {
         for (Descriptors.FieldDescriptor fdef : this.descriptor.getFields()) {
             if (fdef.isRepeated()) {
                 copy.addRepeatedField(fdef, this.getRepeatedField(context, fdef).deepCopy(context));
-            } else {
+            } else if (this.builder.hasField(fdef)) {
                 copy.builder.setField(fdef, this.builder.getField(fdef));
-
             }
         }
         return copy;

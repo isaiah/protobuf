@@ -271,10 +271,8 @@ public class RubyMessage extends RubyObject {
     public static IRubyObject decode(ThreadContext context, IRubyObject recv, IRubyObject data) {
         byte[] bin = data.convertToString().getBytes();
         RubyMessage ret = (RubyMessage) ((RubyClass) recv).newInstance(context, Block.NULL_BLOCK);
-        RubyDescriptor rubyDescriptor = (RubyDescriptor) ((RubyClass) recv).getInstanceVariable(Utils.DESCRIPTOR_INSTANCE_VAR);
         try {
-            DynamicMessage dynamicMessage = DynamicMessage.parseFrom(rubyDescriptor.getDescriptor(), bin);
-            ret.buildFrom(context, dynamicMessage);
+            ret.builder.mergeFrom(bin);
         } catch (InvalidProtocolBufferException e) {
             throw context.runtime.newRuntimeError(e.getMessage());
         }

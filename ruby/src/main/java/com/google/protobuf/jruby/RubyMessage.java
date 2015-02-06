@@ -541,8 +541,11 @@ public class RubyMessage extends RubyObject {
         if (fieldDescriptor.isRepeated()) {
             return getRepeatedField(context, fieldDescriptor);
         }
-        Object value = this.builder.getField(fieldDescriptor);
-        return wrapField(context, fieldDescriptor, value);
+        if (fieldDescriptor.getJavaType() != Descriptors.FieldDescriptor.JavaType.MESSAGE || this.builder.hasField(fieldDescriptor) ) {
+          Object value = this.builder.getField(fieldDescriptor);
+          return wrapField(context, fieldDescriptor, value);
+        }
+        return context.runtime.getNil();
     }
 
     protected IRubyObject setField(ThreadContext context, Descriptors.FieldDescriptor fieldDescriptor, IRubyObject value) {

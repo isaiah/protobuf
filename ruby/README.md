@@ -26,7 +26,8 @@ First, ensure that upb/ is checked out:
 
 Then install the required Ruby gems:
 
-    $ sudo gem install bundler rake rake-compiler rspec rubygems-tasks
+    $ sudo gem install bundler
+    $ bundle
 
 Then build the Gem:
 

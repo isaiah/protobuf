@@ -162,7 +162,7 @@ public class Utils {
         return value instanceof RubyFixnum || value instanceof RubyFloat || value instanceof RubyBignum;
     }
 
-    public static String BADNAME_REPLACEMENT = "YmFkbmFtZQ"; // badname disguised in base64
+    public static String BADNAME_REPLACEMENT = "__DOT__";
 
     public static String DESCRIPTOR_INSTANCE_VAR = "@descriptor";
 

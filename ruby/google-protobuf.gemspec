@@ -14,11 +14,17 @@ Gem::Specification.new do |s|
   s.authors     = ["Protobuf Authors"]
   s.email       = "protobuf@googlegroups.com"
   s.require_paths = ["lib"]
-  s.extensions  = ["ext/google/protobuf_c/extconf.rb"]
-  s.files       = ["lib/google/protobuf.rb"] +
-                  # extension C source
-                  find_c_source("ext/google/protobuf_c")
-  s.test_files = ["tests/basic.rb",
-		  "tests/stress.rb",
-		  "tests/generated_code_test.rb"]
+  s.files       = ["lib/google/protobuf.rb"]
+  unless RUBY_PLATFORM == "java"
+    s.files       += find_c_source("ext/google/protobuf_c")
+    s.extensions  = ["ext/google/protobuf_c/extconf.rb"]
+  else
+    s.files     += ["lib/google/protobuf_java.jar"]
+  end
+  s.test_files  = ["tests/basic.rb",
+                  "tests/stress.rb",
+                  "tests/generated_code_test.rb"]
+  s.add_development_dependency "rake-compiler"
+  s.add_development_dependency "test-unit"
+  s.add_development_dependency "rubygems-tasks"
 end

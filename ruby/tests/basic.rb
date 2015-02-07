@@ -58,6 +58,7 @@ module BasicTest
     end
 
     # different context
+    # TODO map support
     unless RUBY_PLATFORM == "java"
     add_message "MapMessage" do
       map :map_string_int32, :string, :int32, 1
@@ -94,6 +95,7 @@ module BasicTest
   Recursive2 = pool.lookup("Recursive2").msgclass
   TestEnum = pool.lookup("TestEnum").enummodule
   BadFieldNames = pool.lookup("BadFieldNames").msgclass
+  # TODO TBD
   unless RUBY_PLATFORM == "java"
   MapMessage = pool.lookup("MapMessage").msgclass
   MapMessageWireEquiv = pool.lookup("MapMessageWireEquiv").msgclass
@@ -232,6 +234,7 @@ module BasicTest
       # strings are mutable so we can do this, but serialize should catch it.
       m.optional_string = "asdf".encode!('UTF-8')
       m.optional_string.encode!('ASCII-8BIT')
+      # TODO string encoding verification
       unless RUBY_PLATFORM == "java"
       assert_raise TypeError do
         data = TestMessage.encode(m)
@@ -369,6 +372,7 @@ module BasicTest
       end
     end
 
+    # TODO not implemented
     unless RUBY_PLATFORM == "java"
     def test_map_basic
       # allowed key types:
@@ -805,6 +809,7 @@ module BasicTest
     def test_serialize_cycle
       m = Recursive1.new(:foo => Recursive2.new)
       m.foo.foo = m
+      # TODO java doesn't complain recursive cycle
       unless RUBY_PLATFORM == "java"
       assert_raise RuntimeError do
         serialized = Recursive1.encode(m)

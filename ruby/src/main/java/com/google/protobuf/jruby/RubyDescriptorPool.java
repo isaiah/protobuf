@@ -110,14 +110,17 @@ public class RubyDescriptorPool extends RubyObject {
                     this.builder.build(), new Descriptors.FileDescriptor[]{});
 
             for (Descriptors.EnumDescriptor enumDescriptor : fileDescriptor.getEnumTypes()) {
+                String enumName = Utils.unescapeIdentifier(enumDescriptor.getName());
                 if (enumDescriptor.findValueByNumber(0) == null) {
-                    throw runtime.newTypeError("Enum definition " + enumDescriptor.getName()
+                    throw runtime.newTypeError("Enum definition " + enumName
                             + " does not contain a value for '0'");
                 }
-                ((RubyEnumDescriptor) symtab.get(runtime.newString(enumDescriptor.getName()))).setDescriptor(enumDescriptor);
+                ((RubyEnumDescriptor) symtab.get(runtime.newString(enumName)))
+                        .setDescriptor(enumDescriptor);
             }
             for (Descriptors.Descriptor descriptor : fileDescriptor.getMessageTypes()) {
-                RubyDescriptor rubyDescriptor = ((RubyDescriptor) symtab.get(runtime.newString(descriptor.getName())));
+                RubyDescriptor rubyDescriptor = ((RubyDescriptor)
+                        symtab.get(runtime.newString(Utils.unescapeIdentifier(descriptor.getName()))));
                 for (Descriptors.FieldDescriptor fieldDescriptor : descriptor.getFields()) {
                     if (fieldDescriptor.isRequired()) {
                         throw runtime.newTypeError("Required fields are unsupported in proto3");
@@ -126,12 +129,12 @@ public class RubyDescriptorPool extends RubyObject {
                     rubyFieldDescriptor.setFieldDef(fieldDescriptor);
                     if (fieldDescriptor.getJavaType() == Descriptors.FieldDescriptor.JavaType.MESSAGE) {
                         RubyDescriptor subType = (RubyDescriptor) lookup(context,
-                                runtime.newString(fieldDescriptor.getMessageType().getName()));
+                                runtime.newString(Utils.unescapeIdentifier(fieldDescriptor.getMessageType().getName())));
                         rubyFieldDescriptor.setSubType(subType);
                     }
                     if (fieldDescriptor.getJavaType() == Descriptors.FieldDescriptor.JavaType.ENUM) {
                         RubyEnumDescriptor subType = (RubyEnumDescriptor) lookup(context,
-                                runtime.newString(fieldDescriptor.getEnumType().getName()));
+                                runtime.newString(Utils.unescapeIdentifier(fieldDescriptor.getEnumType().getName())));
                         rubyFieldDescriptor.setSubType(subType);
                     }
                 }

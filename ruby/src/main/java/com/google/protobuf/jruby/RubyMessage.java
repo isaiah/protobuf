@@ -367,7 +367,7 @@ public class RubyMessage extends RubyObject {
 
     private Descriptors.FieldDescriptor findField(ThreadContext context, IRubyObject fieldName) {
         String nameStr = fieldName.asJavaString();
-        Descriptors.FieldDescriptor ret = this.descriptor.findFieldByName(nameStr.replace(".", Utils.BADNAME_REPLACEMENT));
+        Descriptors.FieldDescriptor ret = this.descriptor.findFieldByName(Utils.escapeIdentifier(nameStr));
         if (ret == null)
             throw context.runtime.newArgumentError("field " + fieldName.asJavaString() + " is not found");
         return ret;

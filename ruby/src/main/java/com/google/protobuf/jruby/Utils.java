@@ -144,6 +144,24 @@ public class Utils {
             throw context.runtime.newNameError(name + " is already defined", name);
     }
 
+    /**
+     * Replace invalid "." in descriptor with __DOT__
+     * @param name
+     * @return
+     */
+    public static String escapeIdentifier(String name) {
+        return name.replace(".", BADNAME_REPLACEMENT);
+    }
+
+    /**
+     * Replace __DOT__ in descriptor name with "."
+     * @param name
+     * @return
+     */
+    public static String unescapeIdentifier(String name) {
+        return name.replace(BADNAME_REPLACEMENT, ".");
+    }
+
     protected static void checkIntTypePrecision(ThreadContext context, Descriptors.FieldDescriptor.Type type, IRubyObject value) {
         if (value instanceof RubyFloat) {
             double doubleVal = RubyNumeric.num2dbl(value);

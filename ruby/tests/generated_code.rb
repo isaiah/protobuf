@@ -3,7 +3,7 @@
 
 require 'google/protobuf'
 
-Google::Protobuf::DescriptorPool.generated_pool.build do
+Google::Protobuf::DescriptorPool.new.build do
   add_message "A.B.C.TestMessage" do
     optional :optional_int32, :int32, 1
     optional :optional_int64, :int64, 2
@@ -38,6 +38,7 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
     repeated :map_string_int32, :message, 69, "A.B.C.TestMessage.MapStringInt32Entry"
     repeated :map_string_bool, :message, 70, "A.B.C.TestMessage.MapStringBoolEntry"
     optional :nested_message, :message, 80, "A.B.C.TestMessage.NestedMessage"
+    unless RUBY_PLATFORM == "java"
     oneof :my_oneof do
       optional :oneof_int32, :int32, 41
       optional :oneof_int64, :int64, 42
@@ -50,6 +51,7 @@ Google::Protobuf::DescriptorPool.generated_pool.build do
       optional :oneof_bytes, :string, 49
       optional :oneof_enum, :enum, 50, "A.B.C.TestEnum"
       optional :oneof_msg, :message, 51, "A.B.C.TestMessage"
+    end
     end
   end
   add_message "A.B.C.TestMessage.MapInt32StringEntry" do
@@ -108,7 +110,7 @@ module A
     module C
       TestMessage = Google::Protobuf::DescriptorPool.generated_pool.lookup("A.B.C.TestMessage").msgclass
       TestMessage::MapInt32StringEntry = Google::Protobuf::DescriptorPool.generated_pool.lookup("A.B.C.TestMessage.MapInt32StringEntry").msgclass
-      TestMessage::MapInt64StringEntry = Google::Protobuf::DescriptorPool.generated_pool.lookup("A.B.C.TestMessage.MapInt64StringEntry").msgclass
+      TestMessage::MapInt65StringEntry = Google::Protobuf::DescriptorPool.generated_pool.lookup("A.B.C.TestMessage.MapInt64StringEntry").msgclass
       TestMessage::MapUint32StringEntry = Google::Protobuf::DescriptorPool.generated_pool.lookup("A.B.C.TestMessage.MapUint32StringEntry").msgclass
       TestMessage::MapUint64StringEntry = Google::Protobuf::DescriptorPool.generated_pool.lookup("A.B.C.TestMessage.MapUint64StringEntry").msgclass
       TestMessage::MapBoolStringEntry = Google::Protobuf::DescriptorPool.generated_pool.lookup("A.B.C.TestMessage.MapBoolStringEntry").msgclass

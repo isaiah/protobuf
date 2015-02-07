@@ -99,7 +99,7 @@ public class RubyEnumDescriptor extends RubyObject {
     @JRubyMethod(name = "name=")
     public IRubyObject setName(ThreadContext context, IRubyObject name) {
         this.name = name;
-        this.builder.setName(name.asJavaString());
+        this.builder.setName(Utils.escapeIdentifier(name.asJavaString()));
         return context.runtime.getNil();
     }
 

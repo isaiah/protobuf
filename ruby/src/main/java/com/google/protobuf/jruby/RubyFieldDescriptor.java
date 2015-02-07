@@ -112,7 +112,7 @@ public class RubyFieldDescriptor extends RubyObject {
     public IRubyObject setName(ThreadContext context, IRubyObject value) {
         String nameStr = value.asJavaString();
         this.name = context.runtime.newString(nameStr);
-        this.builder.setName(nameStr.replace(".", Utils.BADNAME_REPLACEMENT));
+        this.builder.setName(Utils.escapeIdentifier(nameStr));
         return context.runtime.getNil();
     }
 
@@ -169,8 +169,8 @@ public class RubyFieldDescriptor extends RubyObject {
      * that are part of a message type already added to a pool.
      */
     @JRubyMethod(name = "submsg_name=")
-    public IRubyObject setSubmsgName(ThreadContext context, IRubyObject value) {
-        this.builder.setTypeName(value.asJavaString());
+    public IRubyObject setSubmsgName(ThreadContext context, IRubyObject name) {
+        this.builder.setTypeName("." + Utils.escapeIdentifier(name.asJavaString()));
         return context.runtime.getNil();
     }
 

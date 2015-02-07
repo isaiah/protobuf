@@ -102,7 +102,7 @@ public class RubyDescriptor extends RubyObject {
     @JRubyMethod(name = "name=")
     public IRubyObject setName(ThreadContext context, IRubyObject name) {
         this.name = name;
-        this.builder.setName(this.name.asJavaString());
+        this.builder.setName(Utils.escapeIdentifier(this.name.asJavaString()));
         return context.runtime.getNil();
     }
 
@@ -197,7 +197,7 @@ public class RubyDescriptor extends RubyObject {
     }
 
     protected RubyFieldDescriptor lookup(String fieldName) {
-        return fieldDefMap.get(fieldName.replace(Utils.BADNAME_REPLACEMENT, "."));
+        return fieldDefMap.get(Utils.unescapeIdentifier(fieldName));
     }
 
     private IRubyObject name;

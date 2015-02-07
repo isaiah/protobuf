@@ -3,7 +3,7 @@
 
 require 'google/protobuf'
 
-Google::Protobuf::DescriptorPool.new.build do
+Google::Protobuf::DescriptorPool.generated_pool.build do
   add_message "A.B.C.TestMessage" do
     optional :optional_int32, :int32, 1
     optional :optional_int64, :int64, 2

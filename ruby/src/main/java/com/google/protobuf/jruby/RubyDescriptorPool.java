@@ -55,6 +55,7 @@ public class RubyDescriptorPool extends RubyObject {
         });
 
         cDescriptorPool.defineAnnotatedMethods(RubyDescriptorPool.class);
+        descriptorPool = (RubyDescriptorPool) cDescriptorPool.newInstance(runtime.getCurrentContext(), Block.NULL_BLOCK);
     }
 
     public RubyDescriptorPool(Ruby ruby, RubyClass klazz) {
@@ -91,6 +92,20 @@ public class RubyDescriptorPool extends RubyObject {
             return context.runtime.getNil();
         }
         return descriptor;
+    }
+
+    /*
+     * call-seq:
+     *     DescriptorPool.generated_pool => descriptor_pool
+     *
+     * Class method that returns the global DescriptorPool. This is a singleton into
+     * which generated-code message and enum types are registered. The user may also
+     * register types in this pool for convenience so that they do not have to hold
+     * a reference to a private pool instance.
+     */
+    @JRubyMethod(meta = true, name = "generated_pool")
+    public static IRubyObject generatedPool(ThreadContext context, IRubyObject recv) {
+        return descriptorPool;
     }
 
     protected void addToSymtab(ThreadContext context, RubyDescriptor def) {
@@ -144,6 +159,8 @@ public class RubyDescriptorPool extends RubyObject {
             throw runtime.newRuntimeError(e.getMessage());
         }
     }
+
+    private static RubyDescriptorPool descriptorPool;
 
     private RubyClass cBuilder;
     private Map<IRubyObject, IRubyObject> symtab;

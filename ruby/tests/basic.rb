@@ -754,7 +754,8 @@ module BasicTest
     end
 
     def test_parse_serialize
-      return if PLATFORM == "java"
+      # FIXME jruby implementation
+      return if RUBY_PLATFORM == "java"
       m = TestMessage.new(:optional_int32 => 42,
                           :optional_string => "hello world",
                           :optional_enum => :B,

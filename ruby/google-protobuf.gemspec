@@ -1,10 +1,3 @@
-class << Gem::Specification
-  def find_c_source(dir)
-    `cd #{dir}; git ls-files "*.c" "*.h" extconf.rb Makefile`.split
-    .map{|f| "#{dir}/#{f}"}
-  end
-end
-
 Gem::Specification.new do |s|
   s.name        = "google-protobuf"
   s.version     = "3.0.0.alpha.2"
@@ -16,8 +9,8 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
   s.files       = ["lib/google/protobuf.rb"]
   unless RUBY_PLATFORM == "java"
-    s.files       += find_c_source("ext/google/protobuf_c")
-    s.extensions  = ["ext/google/protobuf_c/extconf.rb"]
+    s.files     += `git ls-files "*.c" "*.h" extconf.rb Makefile`.split
+    s.extensions= ["ext/google/protobuf_c/extconf.rb"]
   else
     s.files     += ["lib/google/protobuf_java.jar"]
   end

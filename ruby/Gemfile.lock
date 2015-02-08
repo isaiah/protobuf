@@ -1,0 +1,15 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    power_assert (0.2.2)
+    rubygems-tasks (0.2.4)
+    test-unit (3.0.9)
+      power_assert
+
+PLATFORMS
+  java
+
+DEPENDENCIES
+  rake-compiler
+  rubygems-tasks
+  test-unit

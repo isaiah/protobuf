@@ -18,6 +18,11 @@ To build this Ruby extension, you will need:
 * a C compiler
 * the upb submodule
 
+To Build the JRuby extension, you will need:
+
+* Maven
+* the latest version of the protobuf java library installed
+
 First, ensure that upb/ is checked out:
 
     $ cd ..   # top level protobuf directory

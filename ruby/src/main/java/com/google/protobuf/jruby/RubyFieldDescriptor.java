@@ -128,8 +128,7 @@ public class RubyFieldDescriptor extends RubyObject {
      */
     @JRubyMethod(name = "type")
     public IRubyObject getType(ThreadContext context) {
-        String typeName = this.builder.getType().name();
-        return context.runtime.newSymbol(typeName.replace("TYPE_", "").toLowerCase());
+        return Utils.fieldTypeToRuby(context, this.builder.getType());
     }
 
     /*

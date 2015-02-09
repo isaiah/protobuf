@@ -33,6 +33,7 @@
 package com.google.protobuf.jruby;
 
 import com.google.protobuf.ByteString;
+import com.google.protobuf.DescriptorProtos;
 import com.google.protobuf.Descriptors;
 import org.jruby.*;
 import org.jruby.runtime.ThreadContext;
@@ -43,6 +44,19 @@ import java.math.BigInteger;
 public class Utils {
     public static Descriptors.FieldDescriptor.Type rubyToFieldType(IRubyObject typeClass) {
         return Descriptors.FieldDescriptor.Type.valueOf(typeClass.asJavaString().toUpperCase());
+    }
+
+    public static IRubyObject fieldTypeToRuby(ThreadContext context, Descriptors.FieldDescriptor.Type type) {
+        return fieldTypeToRuby(context, type.name());
+    }
+
+    public static IRubyObject fieldTypeToRuby(ThreadContext context, DescriptorProtos.FieldDescriptorProto.Type type) {
+        return fieldTypeToRuby(context, type.name());
+    }
+
+    private static IRubyObject fieldTypeToRuby(ThreadContext context, String typeName) {
+
+        return context.runtime.newSymbol(typeName.replace("TYPE_", "").toLowerCase());
     }
 
     public static void checkType(ThreadContext context, Descriptors.FieldDescriptor.Type fieldType,

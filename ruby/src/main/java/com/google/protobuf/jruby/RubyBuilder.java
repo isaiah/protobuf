@@ -88,7 +88,7 @@ public class RubyBuilder extends RubyObject {
     @JRubyMethod(name = "add_message")
     public IRubyObject addMessage(ThreadContext context, IRubyObject name, Block block) {
         RubyDescriptor msgdef = (RubyDescriptor) cDescriptor.newInstance(context, Block.NULL_BLOCK);
-        IRubyObject ctx = cMessageBuilderContext.newInstance(context, msgdef, Block.NULL_BLOCK);
+        IRubyObject ctx = cMessageBuilderContext.newInstance(context, msgdef, this, Block.NULL_BLOCK);
         msgdef.setName(context, name);
         if (block.isGiven()) {
             if (block.arity() == Arity.ONE_ARGUMENT) {
@@ -162,6 +162,6 @@ public class RubyBuilder extends RubyObject {
         return context.runtime.getNil();
     }
 
-    private RubyArray pendingList;
+    protected RubyArray pendingList;
     private RubyClass cDescriptor, cEnumDescriptor, cMessageBuilderContext, cEnumBuilderContext;
 }

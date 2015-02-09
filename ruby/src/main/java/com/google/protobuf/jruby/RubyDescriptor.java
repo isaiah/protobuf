@@ -172,6 +172,14 @@ public class RubyDescriptor extends RubyObject {
         return this.descriptor;
     }
 
+    public DescriptorProtos.DescriptorProto.Builder getBuilder() {
+        return builder;
+    }
+
+    public void setMapEntry(boolean isMapEntry) {
+        this.mapentry = isMapEntry;
+    }
+
     private RubyModule buildClassFromDescriptor(ThreadContext context) {
         Ruby runtime = context.runtime;
 
@@ -192,16 +200,13 @@ public class RubyDescriptor extends RubyObject {
         return klass;
     }
 
-    public DescriptorProtos.DescriptorProto.Builder getBuilder() {
-        return builder;
-    }
-
     protected RubyFieldDescriptor lookup(String fieldName) {
         return fieldDefMap.get(Utils.unescapeIdentifier(fieldName));
     }
 
     private IRubyObject name;
     private RubyModule klazz;
+    private boolean mapentry = false;
 
     private DescriptorProtos.DescriptorProto.Builder builder;
     private Descriptors.Descriptor descriptor;

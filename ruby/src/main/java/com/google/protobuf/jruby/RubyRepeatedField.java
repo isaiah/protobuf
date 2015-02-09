@@ -82,7 +82,7 @@ public class RubyRepeatedField extends RubyObject {
             typeClass = args[1];
             if (args.length > 2)
                 ary = args[2];
-            validateTypeClass(fieldType, typeClass);
+            validateTypeClass(context, fieldType, typeClass);
         } else {
             if (args.length > 2)
                 throw runtime.newArgumentError("Too many arguments: expected 1 or 2");
@@ -378,10 +378,9 @@ public class RubyRepeatedField extends RubyObject {
         return Utils.wrapPrimaryValue(context, fieldType, value);
     }
 
-    private void validateTypeClass(Descriptors.FieldDescriptor.Type fieldType, IRubyObject typeClass) {
-        Ruby runtime = getRuntime();
+    private void validateTypeClass(ThreadContext context, Descriptors.FieldDescriptor.Type fieldType, IRubyObject typeClass) {
         if (!typeClass.getInstanceVariables().hasInstanceVariable(Utils.DESCRIPTOR_INSTANCE_VAR))
-            throw runtime.newArgumentError("Type class has no descriptor. Please pass a class or enum as returned by" +
+            throw context.runtime.newArgumentError("Type class has no descriptor. Please pass a class or enum as returned by" +
                     " the descriptor pool");
     }
 

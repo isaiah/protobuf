@@ -86,6 +86,7 @@ public class RubyMessage extends RubyObject {
                         throw runtime.newTypeError("Expected symbols as hash keys in initialization map.");
                     Descriptors.FieldDescriptor fieldDescriptor = findField(context, key);
                     if (fieldDescriptor.isRepeated()) {
+                        // XXX check is mapentry
                         if (!(value instanceof RubyArray))
                             throw runtime.newTypeError("Expected array as initializer var for repeated field.");
                         RubyRepeatedField repeatedField = rubyToRepeatedField(context, fieldDescriptor, value);

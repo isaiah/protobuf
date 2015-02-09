@@ -163,7 +163,7 @@ public class RubyMap extends RubyObject {
         for (IRubyObject key : table.keySet()) {
             if (! other.table.containsKey(key))
                 return context.runtime.getFalse();
-            if (! other.table.get(key).eql(table.get(key)))
+            if (! other.table.get(key).equals(table.get(key)))
                 return context.runtime.getFalse();
         }
         return context.runtime.getTrue();
@@ -297,7 +297,6 @@ public class RubyMap extends RubyObject {
     @JRubyMethod
     public IRubyObject dup(ThreadContext context) {
         RubyMap newMap = newThisType(context);
-        newMap.table = new HashMap<IRubyObject, IRubyObject>();
         for (Map.Entry<IRubyObject, IRubyObject> entry : table.entrySet()) {
             newMap.table.put(entry.getKey(), entry.getValue());
         }
@@ -306,7 +305,20 @@ public class RubyMap extends RubyObject {
 
     // Used by Google::Protobuf.deep_copy but not exposed directly.
     protected IRubyObject deepCopy(ThreadContext context) {
-        return this;
+        RubyMap newMap = newThisType(context);
+        switch (valueType) {
+            case MESSAGE:
+                for (IRubyObject key : table.keySet()) {
+                    RubyMessage message = (RubyMessage) table.get(key);
+                    newMap.table.put(key.dup(), message.deepCopy(context));
+                }
+                break;
+            default:
+                for (IRubyObject key : table.keySet()) {
+                    newMap.table.put(key.dup(), table.get(key).dup());
+                }
+        }
+        return newMap;
     }
 
     private RubyMap newThisType(ThreadContext context) {
@@ -322,6 +334,7 @@ public class RubyMap extends RubyObject {
                     Utils.fieldTypeToRuby(context, valueType),
                     Block.NULL_BLOCK);
         }
+        newMap.table = new HashMap<IRubyObject, IRubyObject>();
         return newMap;
     }
 

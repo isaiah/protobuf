@@ -537,7 +537,7 @@ module BasicTest
       assert m["b"].object_id == m2["b"].object_id
 
       m2 = Google::Protobuf.deep_copy(m)
-      assert m == m2
+      assert_equal m, m2
       assert m.object_id != m2.object_id
       assert m["a"].object_id != m2["a"].object_id
       assert m["b"].object_id != m2["b"].object_id

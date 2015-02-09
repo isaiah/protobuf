@@ -32,10 +32,7 @@
 
 package com.google.protobuf.jruby;
 
-import com.google.protobuf.ByteString;
-import com.google.protobuf.Descriptors;
-import com.google.protobuf.DynamicMessage;
-import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.*;
 import com.googlecode.protobuf.format.JsonFormat;
 import org.jcodings.specific.ASCIIEncoding;
 import org.jcodings.specific.USASCIIEncoding;
@@ -71,7 +68,8 @@ public class RubyMessage extends RubyObject {
     @JRubyMethod(optional = 1)
     public IRubyObject initialize(final ThreadContext context, IRubyObject[] args) {
         final Ruby runtime = context.runtime;
-        cRepeatedField = (RubyClass) runtime.getClassFromPath("Google::Protobuf::RepeatedField");
+        this.cRepeatedField = (RubyClass) runtime.getClassFromPath("Google::Protobuf::RepeatedField");
+        this.cMap = (RubyClass) runtime.getClassFromPath("Google::Protobuf::Map");
         this.builder = DynamicMessage.newBuilder(this.descriptor);
         this.repeatedFields = new HashMap<Descriptors.FieldDescriptor, RubyRepeatedField>();
         if (args.length == 1) {
@@ -84,8 +82,26 @@ public class RubyMessage extends RubyObject {
                 public void visit(IRubyObject key, IRubyObject value) {
                     if (!(key instanceof RubySymbol))
                         throw runtime.newTypeError("Expected symbols as hash keys in initialization map.");
-                    Descriptors.FieldDescriptor fieldDescriptor = findField(context, key);
-                    if (fieldDescriptor.isRepeated()) {
+                    final Descriptors.FieldDescriptor fieldDescriptor = findField(context, key);
+                    if (fieldDescriptor.getType() == Descriptors.FieldDescriptor.Type.MESSAGE &&
+                            fieldDescriptor.isRepeated() &&
+                            fieldDescriptor.getMessageType().getOptions().getMapEntry()) {
+                        if (!(value instanceof RubyHash))
+                            throw runtime.newArgumentError("Expected Hash object as initializer value for map field.");
+                        Descriptors.Descriptor mapDescriptor = fieldDescriptor.getContainingType();
+                        final Descriptors.FieldDescriptor keyField = mapDescriptor.findFieldByName("key");
+                        final Descriptors.FieldDescriptor valueField = mapDescriptor.findFieldByName("value");
+                        final RubyClass mapClass = (RubyClass) ((RubyDescriptor) getDescriptorForField(context, fieldDescriptor)).msgclass(context);
+                        ((RubyHash) value).visitAll(new RubyHash.Visitor() {
+                            @Override
+                            public void visit(IRubyObject k, IRubyObject v) {
+                                RubyMessage map = (RubyMessage) mapClass.newInstance(context, Block.NULL_BLOCK);
+                                map.setField(context, keyField, k);
+                                map.setField(context, valueField, v);
+                                builder.addRepeatedField(fieldDescriptor, map.build(context));
+                            }
+                        });
+                    } else if (fieldDescriptor.isRepeated()) {
                         // XXX check is mapentry
                         if (!(value instanceof RubyArray))
                             throw runtime.newTypeError("Expected array as initializer var for repeated field.");
@@ -505,20 +521,21 @@ public class RubyMessage extends RubyObject {
         IRubyObject typeClass = context.runtime.getNilClass();
 
         IRubyObject descriptor = getDescriptorForField(context, fieldDescriptor);
-        if (fieldDescriptor.getJavaType() == Descriptors.FieldDescriptor.JavaType.MESSAGE) {
+        Descriptors.FieldDescriptor.Type type = fieldDescriptor.getType();
+        if (type == Descriptors.FieldDescriptor.Type.MESSAGE) {
             typeClass = ((RubyDescriptor) descriptor).msgclass(context);
 
-        } else if (fieldDescriptor.getJavaType() == Descriptors.FieldDescriptor.JavaType.ENUM) {
+        } else if (type == Descriptors.FieldDescriptor.Type.ENUM) {
             typeClass = ((RubyEnumDescriptor) descriptor).enummodule(context);
         }
-        return new RubyRepeatedField(context.runtime, cRepeatedField, fieldDescriptor.getType(), typeClass);
+        return new RubyRepeatedField(context.runtime, cRepeatedField, type, typeClass);
     }
 
     protected IRubyObject getField(ThreadContext context, Descriptors.FieldDescriptor fieldDescriptor) {
         if (fieldDescriptor.isRepeated()) {
             return getRepeatedField(context, fieldDescriptor);
         }
-        if (fieldDescriptor.getJavaType() != Descriptors.FieldDescriptor.JavaType.MESSAGE || this.builder.hasField(fieldDescriptor)) {
+        if (fieldDescriptor.getType() != Descriptors.FieldDescriptor.Type.MESSAGE || this.builder.hasField(fieldDescriptor)) {
             Object value = this.builder.getField(fieldDescriptor);
             return wrapField(context, fieldDescriptor, value);
         }
@@ -572,5 +589,6 @@ public class RubyMessage extends RubyObject {
     private Descriptors.Descriptor descriptor;
     private DynamicMessage.Builder builder;
     private RubyClass cRepeatedField;
+    private RubyClass cMap;
     private Map<Descriptors.FieldDescriptor, RubyRepeatedField> repeatedFields;
 }

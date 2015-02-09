@@ -184,7 +184,7 @@ public class RubyMessageBuilderContext extends RubyObject {
         // create the map field itself.
         this.builder.pendingList.add(mapentryDesc);
 
-        msgdefAddField(context, "repeated", name, runtime.newString("message"), number, mapentryDescName);
+        msgdefAddField(context, "repeated", name, runtime.newSymbol("message"), number, mapentryDescName);
         return runtime.getNil();
     }
 

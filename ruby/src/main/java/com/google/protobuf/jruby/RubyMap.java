@@ -116,7 +116,7 @@ public class RubyMap extends RubyObject {
      */
     @JRubyMethod(name = "[]=")
     public IRubyObject indexSet(ThreadContext context, IRubyObject key, IRubyObject value) {
-        checkKeyType(context, key);
+        Utils.checkType(context, keyType, key, (RubyModule) valueTypeClass);
         Utils.checkType(context, valueType, value, (RubyModule) valueTypeClass);
         this.table.put(key, value);
         return value;
@@ -304,6 +304,11 @@ public class RubyMap extends RubyObject {
         return newMap;
     }
 
+    // Used by Google::Protobuf.deep_copy but not exposed directly.
+    protected IRubyObject deepCopy(ThreadContext context) {
+        return this;
+    }
+
     private RubyMap newThisType(ThreadContext context) {
         RubyMap newMap;
         if (needTypeclass(valueType)) {
@@ -361,24 +366,6 @@ public class RubyMap extends RubyObject {
             throw context.runtime.newArgumentError("Unknown type merging into Map");
         }
         return this;
-    }
-
-    private void checkKeyType(ThreadContext context, IRubyObject key) {
-        switch(keyType) {
-            case BYTES:
-            case STRING:
-                if (!(key instanceof RubyString))
-                    throw context.runtime.newTypeError(key, "String");
-                break;
-            case BOOL:
-            case INT32:
-            case INT64:
-            case UINT32:
-            case UINT64:
-                break;
-            default:
-                throw context.runtime.newTypeError(key, keyType.name());
-        }
     }
 
     private Descriptors.FieldDescriptor.Type keyType;

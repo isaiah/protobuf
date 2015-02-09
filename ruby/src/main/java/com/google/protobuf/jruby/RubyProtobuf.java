@@ -109,8 +109,10 @@ public class RubyProtobuf {
     public static IRubyObject deepCopy(ThreadContext context, IRubyObject self, IRubyObject message) {
         if (message instanceof RubyMessage) {
             return ((RubyMessage) message).deepCopy(context);
-        } else {
+        } else if (message instanceof RubyRepeatedField) {
             return ((RubyRepeatedField) message).deepCopy(context);
+        } else {
+            return ((RubyMap) message).deepCopy(context);
         }
     }
 }

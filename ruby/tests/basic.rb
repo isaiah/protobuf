@@ -414,9 +414,9 @@ module BasicTest
       assert_raise TypeError do
         m[1] = 1
       end
-      #assert_raise RangeError do
+      assert_raise RangeError do
         m["asdf"] = 0x1_0000_0000
-      #end
+      end
     end
 
     def test_map_ctor
@@ -494,8 +494,6 @@ module BasicTest
       end
     end
 
-    # TODO not implemented
-    unless RUBY_PLATFORM == "java"
     def test_map_msg_enum_valuetypes
       m = Google::Protobuf::Map.new(:string, :message, TestMessage)
       m["asdf"] = TestMessage.new
@@ -606,6 +604,8 @@ module BasicTest
                     "b" => TestMessage2.new(:foo => 2)}
     end
 
+    # TODO not implemented
+    unless RUBY_PLATFORM == "java"
     def test_oneof_descriptors
       d = OneofMessage.descriptor
       o = d.lookup_oneof("my_oneof")

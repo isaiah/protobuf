@@ -406,14 +406,7 @@ public class RubyMessage extends RubyObject {
                         val = Utils.num2uint(value);
                         break;
                     case UINT64:
-                        if (value instanceof RubyFloat) {
-                            RubyBignum bignum = RubyBignum.newBignum(runtime, ((RubyFloat) value).getDoubleValue());
-                            val = RubyBignum.big2ulong(bignum);
-                        } else if (value instanceof RubyBignum) {
-                            val = RubyBignum.big2ulong((RubyBignum) value);
-                        } else {
-                            val = RubyNumeric.num2long(value);
-                        }
+                        val = Utils.num2ulong(context.runtime, value);
                         break;
                     default:
                         break;
@@ -436,25 +429,15 @@ public class RubyMessage extends RubyObject {
                 break;
             case BYTES:
             case STRING:
-                if (!(value instanceof RubyString))
-                    throw runtime.newTypeError("Invalid argument for string field.");
+                Utils.validateStringEncoding(context.runtime, fieldDescriptor.getType(), value);
                 RubyString str = (RubyString) value;
                 switch (fieldDescriptor.getType()) {
                     case BYTES:
-                        if (str.getEncoding() == ASCIIEncoding.INSTANCE) {
-                            val = ByteString.copyFrom(str.getBytes());
-                            break;
-                        }
-                        throw runtime.newTypeError("Encoding for bytes fields" +
-                                " must be \"ASCII-8BIT\", but was " + str.getEncoding());
+                        val = ByteString.copyFrom(str.getBytes());
+                        break;
                     case STRING:
-                        if (str.getEncoding() == UTF8Encoding.INSTANCE
-                                || str.getEncoding() == USASCIIEncoding.INSTANCE) {
-                            val = str.asJavaString();
-                            break;
-                        }
-                        throw runtime.newTypeError("Encoding for string fields" +
-                                " must be \"UTF-8\" or \"ASCII\", but was " + str.getEncoding());
+                        val = str.asJavaString();
+                        break;
                     default:
                         break;
                 }
@@ -534,9 +517,9 @@ public class RubyMessage extends RubyObject {
         if (fieldDescriptor.isRepeated()) {
             return getRepeatedField(context, fieldDescriptor);
         }
-        if (fieldDescriptor.getJavaType() != Descriptors.FieldDescriptor.JavaType.MESSAGE || this.builder.hasField(fieldDescriptor) ) {
-          Object value = this.builder.getField(fieldDescriptor);
-          return wrapField(context, fieldDescriptor, value);
+        if (fieldDescriptor.getJavaType() != Descriptors.FieldDescriptor.JavaType.MESSAGE || this.builder.hasField(fieldDescriptor)) {
+            Object value = this.builder.getField(fieldDescriptor);
+            return wrapField(context, fieldDescriptor, value);
         }
         return context.runtime.getNil();
     }

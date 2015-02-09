@@ -35,6 +35,10 @@ package com.google.protobuf.jruby;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.DescriptorProtos;
 import com.google.protobuf.Descriptors;
+import org.jcodings.Encoding;
+import org.jcodings.specific.ASCIIEncoding;
+import org.jcodings.specific.USASCIIEncoding;
+import org.jcodings.specific.UTF8Encoding;
 import org.jruby.*;
 import org.jruby.runtime.ThreadContext;
 import org.jruby.runtime.builtin.IRubyObject;
@@ -71,6 +75,20 @@ public class Utils {
                 if (!isRubyNum(value)) {
                     throw runtime.newTypeError("Expected number type for integral field.");
                 }
+                switch(fieldType) {
+                    case INT32:
+                        RubyNumeric.num2int(value);
+                        break;
+                    case INT64:
+                        RubyNumeric.num2long(value);
+                        break;
+                    case UINT32:
+                        num2uint(value);
+                        break;
+                    default:
+                        num2ulong(context.runtime, value);
+                        break;
+                }
                 checkIntTypePrecision(context, fieldType, value);
                 break;
             case FLOAT:
@@ -86,12 +104,8 @@ public class Utils {
                     throw runtime.newTypeError("Invalid argument for boolean field.");
                 break;
             case BYTES:
-                if (!(value instanceof RubyString))
-                    throw runtime.newTypeError("Invalid argument for string field.");
-                break;
             case STRING:
-                if (!(value instanceof RubyString))
-                    throw runtime.newTypeError("Invalid argument for string field.");
+                validateStringEncoding(context.runtime, fieldType, value);
                 break;
             case MESSAGE:
                 if (value.getMetaClass() != typeClass) {
@@ -151,6 +165,38 @@ public class Utils {
             num = (-longVal ^ (-1l >>> 32) ) + 1;
         RubyNumeric.checkInt(value, num);
         return (int) num;
+    }
+
+    public static long num2ulong(Ruby runtime, IRubyObject value) {
+        if (value instanceof RubyFloat) {
+            RubyBignum bignum = RubyBignum.newBignum(runtime, ((RubyFloat) value).getDoubleValue());
+            return RubyBignum.big2ulong(bignum);
+        } else if (value instanceof RubyBignum) {
+            return RubyBignum.big2ulong((RubyBignum) value);
+        } else {
+            return RubyNumeric.num2long(value);
+        }
+    }
+
+    public static void validateStringEncoding(Ruby runtime, Descriptors.FieldDescriptor.Type type, IRubyObject value) {
+        if (!(value instanceof RubyString))
+            throw runtime.newTypeError("Invalid argument for string field.");
+        Encoding encoding = ((RubyString) value).getEncoding();
+        switch(type) {
+            case BYTES:
+                if (encoding != ASCIIEncoding.INSTANCE)
+                    throw runtime.newTypeError("Encoding for bytes fields" +
+                            " must be \"ASCII-8BIT\", but was " + encoding);
+                break;
+            case STRING:
+                if (encoding != UTF8Encoding.INSTANCE
+                        && encoding != USASCIIEncoding.INSTANCE)
+                    throw runtime.newTypeError("Encoding for string fields" +
+                            " must be \"UTF-8\" or \"ASCII\", but was " + encoding);
+                break;
+            default:
+                break;
+        }
     }
 
     public static void checkNameAvailability(ThreadContext context, String name) {

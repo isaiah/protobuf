@@ -143,12 +143,12 @@ public class RubyDescriptorPool extends RubyObject {
                     }
                     RubyFieldDescriptor rubyFieldDescriptor = rubyDescriptor.lookup(fieldDescriptor.getName());
                     rubyFieldDescriptor.setFieldDef(fieldDescriptor);
-                    if (fieldDescriptor.getJavaType() == Descriptors.FieldDescriptor.JavaType.MESSAGE) {
+                    if (fieldDescriptor.getType() == Descriptors.FieldDescriptor.Type.MESSAGE) {
                         RubyDescriptor subType = (RubyDescriptor) lookup(context,
                                 runtime.newString(Utils.unescapeIdentifier(fieldDescriptor.getMessageType().getName())));
                         rubyFieldDescriptor.setSubType(subType);
                     }
-                    if (fieldDescriptor.getJavaType() == Descriptors.FieldDescriptor.JavaType.ENUM) {
+                    if (fieldDescriptor.getType() == Descriptors.FieldDescriptor.Type.ENUM) {
                         RubyEnumDescriptor subType = (RubyEnumDescriptor) lookup(context,
                                 runtime.newString(Utils.unescapeIdentifier(fieldDescriptor.getEnumType().getName())));
                         rubyFieldDescriptor.setSubType(subType);

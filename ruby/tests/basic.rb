@@ -546,7 +546,7 @@ module BasicTest
     def test_map_field
       m = MapMessage.new
       assert_equal m.map_string_int32, {}
-      assert m.map_string_msg == {}
+      assert_equal m.map_string_msg, {}
 
       m = MapMessage.new(
         :map_string_int32 => {"a" => 1, "b" => 2},

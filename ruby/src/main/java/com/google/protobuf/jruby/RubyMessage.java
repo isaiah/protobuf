@@ -88,21 +88,9 @@ public class RubyMessage extends RubyObject {
                     if (Utils.isMapEntry(fieldDescriptor)) {
                         if (!(value instanceof RubyHash))
                             throw runtime.newArgumentError("Expected Hash object as initializer value for map field.");
-                        Descriptors.Descriptor mapDescriptor = fieldDescriptor.getMessageType();
-                        final Descriptors.FieldDescriptor keyField = mapDescriptor.findFieldByName("key");
-                        final Descriptors.FieldDescriptor valueField = mapDescriptor.findFieldByName("value");
-                        final RubyMap map = (RubyMap) cMap.newInstance(context, Block.NULL_BLOCK);
-//                        final RubyClass mapClass = (RubyClass) ((RubyDescriptor) getDescriptorForField(context, fieldDescriptor)).msgclass(context);
-                        ((RubyHash) value).visitAll(new RubyHash.Visitor() {
-                            @Override
-                            public void visit(IRubyObject k, IRubyObject v) {
-                                map.indexSet(context, k, v);
-//                                RubyMessage map = (RubyMessage) mapClass.newInstance(context, Block.NULL_BLOCK);
-//                                map.setField(context, keyField, k);
-//                                map.setField(context, valueField, v);
-//                                builder.addRepeatedField(fieldDescriptor, map.build(context));
-                            }
-                        });
+
+                        final RubyMap map = newMapForField(context, fieldDescriptor);
+                        map.mergeIntoSelf(context, value);
                         maps.put(fieldDescriptor, map);
                     } else if (fieldDescriptor.isRepeated()) {
                         if (!(value instanceof RubyArray))
@@ -533,7 +521,11 @@ public class RubyMessage extends RubyObject {
     protected IRubyObject getField(ThreadContext context, Descriptors.FieldDescriptor fieldDescriptor) {
         if (Utils.isMapEntry(fieldDescriptor)) {
             RubyMap map = maps.get(fieldDescriptor);
-            return map == null ? cMap.newInstance(context, Block.NULL_BLOCK) : map;
+            if (map == null) {
+                map = newMapForField(context, fieldDescriptor);
+                maps.put(fieldDescriptor, map);
+            }
+            return map;
         }
         if (fieldDescriptor.isRepeated()) {
             return getRepeatedField(context, fieldDescriptor);
@@ -546,7 +538,9 @@ public class RubyMessage extends RubyObject {
     }
 
     protected IRubyObject setField(ThreadContext context, Descriptors.FieldDescriptor fieldDescriptor, IRubyObject value) {
-        if (fieldDescriptor.isRepeated()) {
+        if (Utils.isMapEntry(fieldDescriptor)) {
+            this.maps.put(fieldDescriptor, (RubyMap) value);
+        } else if (fieldDescriptor.isRepeated()) {
             checkRepeatedFieldType(context, value, fieldDescriptor);
             if (value instanceof RubyRepeatedField) {
                 addRepeatedField(fieldDescriptor, (RubyRepeatedField) value);
@@ -587,6 +581,22 @@ public class RubyMessage extends RubyObject {
             repeatedField.push(context, arr.eltInternal(i));
         }
         return repeatedField;
+    }
+
+    private RubyMap newMapForField(ThreadContext context, Descriptors.FieldDescriptor fieldDescriptor) {
+        RubyDescriptor mapDescriptor = (RubyDescriptor) getDescriptorForField(context, fieldDescriptor);
+        Descriptors.FieldDescriptor keyField = fieldDescriptor.getMessageType().findFieldByNumber(1);
+        Descriptors.FieldDescriptor valueField = fieldDescriptor.getMessageType().findFieldByNumber(2);
+        IRubyObject keyType = RubySymbol.newSymbol(context.runtime, keyField.getType().name());
+        IRubyObject valueType = RubySymbol.newSymbol(context.runtime, valueField.getType().name());
+        if (valueField.getType() == Descriptors.FieldDescriptor.Type.MESSAGE) {
+            RubyFieldDescriptor rubyFieldDescriptor = (RubyFieldDescriptor) mapDescriptor.lookup(context,
+                    context.runtime.newString("value"));
+            RubyDescriptor rubyDescriptor = (RubyDescriptor) rubyFieldDescriptor.getSubType(context);
+            return (RubyMap) cMap.newInstance(context, keyType, valueType, rubyDescriptor.msgclass(context), Block.NULL_BLOCK);
+        } else {
+            return (RubyMap) cMap.newInstance(context, keyType, valueType, Block.NULL_BLOCK);
+        }
     }
 
     private Descriptors.Descriptor descriptor;

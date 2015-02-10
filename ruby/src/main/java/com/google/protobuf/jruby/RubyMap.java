@@ -321,6 +321,26 @@ public class RubyMap extends RubyObject {
         return newMap;
     }
 
+    protected RubyMap mergeIntoSelf(final ThreadContext context, IRubyObject hashmap) {
+        if (hashmap instanceof RubyHash) {
+            ((RubyHash) hashmap).visitAll(new RubyHash.Visitor() {
+                @Override
+                public void visit(IRubyObject key, IRubyObject val) {
+                    indexSet(context, key, val);
+                }
+            });
+        } else if (hashmap instanceof RubyMap) {
+            RubyMap other = (RubyMap) hashmap;
+            if (this.keyType != other.keyType || this.valueType != other.valueType ||
+                    this.valueTypeClass != other.valueTypeClass) {
+                throw context.runtime.newArgumentError("Attempt to merge Map with mismatching types");
+            }
+        } else {
+            throw context.runtime.newArgumentError("Unknown type merging into Map");
+        }
+        return this;
+    }
+
     private RubyMap newThisType(ThreadContext context) {
         RubyMap newMap;
         if (needTypeclass(valueType)) {
@@ -359,26 +379,6 @@ public class RubyMap extends RubyObject {
                             "class or enum as returned by the DescriptorPool.");
         }
         // TODO validate descriptor type
-    }
-
-    private RubyMap mergeIntoSelf(final ThreadContext context, IRubyObject hashmap) {
-        if (hashmap instanceof RubyHash) {
-            ((RubyHash) hashmap).visitAll(new RubyHash.Visitor() {
-                @Override
-                public void visit(IRubyObject key, IRubyObject val) {
-                    indexSet(context, key, val);
-                }
-            });
-        } else if (hashmap instanceof RubyMap) {
-            RubyMap other = (RubyMap) hashmap;
-            if (this.keyType != other.keyType || this.valueType != other.valueType ||
-                    this.valueTypeClass != other.valueTypeClass) {
-                throw context.runtime.newArgumentError("Attempt to merge Map with mismatching types");
-            }
-        } else {
-            throw context.runtime.newArgumentError("Unknown type merging into Map");
-        }
-        return this;
     }
 
     private Descriptors.FieldDescriptor.Type keyType;

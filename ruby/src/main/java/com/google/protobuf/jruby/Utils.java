@@ -222,6 +222,12 @@ public class Utils {
         return name.replace(BADNAME_REPLACEMENT, ".");
     }
 
+    public static boolean isMapEntry(Descriptors.FieldDescriptor fieldDescriptor) {
+        return fieldDescriptor.getType() == Descriptors.FieldDescriptor.Type.MESSAGE &&
+                fieldDescriptor.isRepeated() &&
+                fieldDescriptor.getMessageType().getOptions().getMapEntry();
+    }
+
     protected static void checkIntTypePrecision(ThreadContext context, Descriptors.FieldDescriptor.Type type, IRubyObject value) {
         if (value instanceof RubyFloat) {
             double doubleVal = RubyNumeric.num2dbl(value);

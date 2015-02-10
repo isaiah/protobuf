@@ -72,6 +72,7 @@ public class RubyMessage extends RubyObject {
         this.cMap = (RubyClass) runtime.getClassFromPath("Google::Protobuf::Map");
         this.builder = DynamicMessage.newBuilder(this.descriptor);
         this.repeatedFields = new HashMap<Descriptors.FieldDescriptor, RubyRepeatedField>();
+        this.maps = new HashMap<Descriptors.FieldDescriptor, RubyMap>();
         if (args.length == 1) {
             if (!(args[0] instanceof RubyHash)) {
                 throw runtime.newArgumentError("expected Hash arguments.");
@@ -84,26 +85,26 @@ public class RubyMessage extends RubyObject {
                         throw runtime.newTypeError("Expected symbols as hash keys in initialization map.");
                     final Descriptors.FieldDescriptor fieldDescriptor = findField(context, key);
 
-                    if (fieldDescriptor.getType() == Descriptors.FieldDescriptor.Type.MESSAGE &&
-                            fieldDescriptor.isRepeated() &&
-                            fieldDescriptor.getMessageType().getOptions().getMapEntry()) {
+                    if (Utils.isMapEntry(fieldDescriptor)) {
                         if (!(value instanceof RubyHash))
                             throw runtime.newArgumentError("Expected Hash object as initializer value for map field.");
-                        Descriptors.Descriptor mapDescriptor = fieldDescriptor.getContainingType();
+                        Descriptors.Descriptor mapDescriptor = fieldDescriptor.getMessageType();
                         final Descriptors.FieldDescriptor keyField = mapDescriptor.findFieldByName("key");
                         final Descriptors.FieldDescriptor valueField = mapDescriptor.findFieldByName("value");
-                        final RubyClass mapClass = (RubyClass) ((RubyDescriptor) getDescriptorForField(context, fieldDescriptor)).msgclass(context);
+                        final RubyMap map = (RubyMap) cMap.newInstance(context, Block.NULL_BLOCK);
+//                        final RubyClass mapClass = (RubyClass) ((RubyDescriptor) getDescriptorForField(context, fieldDescriptor)).msgclass(context);
                         ((RubyHash) value).visitAll(new RubyHash.Visitor() {
                             @Override
                             public void visit(IRubyObject k, IRubyObject v) {
-                                RubyMessage map = (RubyMessage) mapClass.newInstance(context, Block.NULL_BLOCK);
-                                map.setField(context, keyField, k);
-                                map.setField(context, valueField, v);
-                                builder.addRepeatedField(fieldDescriptor, map.build(context));
+                                map.indexSet(context, k, v);
+//                                RubyMessage map = (RubyMessage) mapClass.newInstance(context, Block.NULL_BLOCK);
+//                                map.setField(context, keyField, k);
+//                                map.setField(context, valueField, v);
+//                                builder.addRepeatedField(fieldDescriptor, map.build(context));
                             }
                         });
+                        maps.put(fieldDescriptor, map);
                     } else if (fieldDescriptor.isRepeated()) {
-                        // XXX check is mapentry
                         if (!(value instanceof RubyArray))
                             throw runtime.newTypeError("Expected array as initializer var for repeated field.");
                         RubyRepeatedField repeatedField = rubyToRepeatedField(context, fieldDescriptor, value);
@@ -500,9 +501,6 @@ public class RubyMessage extends RubyObject {
             case STRING:
                 return Utils.wrapPrimaryValue(context, fieldDescriptor.getType(), value);
             case MESSAGE:
-                if (!((DynamicMessage) value).isInitialized()) {
-                    return runtime.getNil();
-                }
                 RubyClass typeClass = (RubyClass) ((RubyDescriptor) getDescriptorForField(context, fieldDescriptor)).msgclass(context);
                 RubyMessage msg = (RubyMessage) typeClass.newInstance(context, Block.NULL_BLOCK);
                 return msg.buildFrom(context, (DynamicMessage) value);
@@ -533,6 +531,10 @@ public class RubyMessage extends RubyObject {
     }
 
     protected IRubyObject getField(ThreadContext context, Descriptors.FieldDescriptor fieldDescriptor) {
+        if (Utils.isMapEntry(fieldDescriptor)) {
+            RubyMap map = maps.get(fieldDescriptor);
+            return map == null ? cMap.newInstance(context, Block.NULL_BLOCK) : map;
+        }
         if (fieldDescriptor.isRepeated()) {
             return getRepeatedField(context, fieldDescriptor);
         }
@@ -592,4 +594,5 @@ public class RubyMessage extends RubyObject {
     private RubyClass cRepeatedField;
     private RubyClass cMap;
     private Map<Descriptors.FieldDescriptor, RubyRepeatedField> repeatedFields;
+    private Map<Descriptors.FieldDescriptor, RubyMap> maps;
 }

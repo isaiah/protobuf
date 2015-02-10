@@ -177,7 +177,7 @@ public class RubyDescriptor extends RubyObject {
     }
 
     public void setMapEntry(boolean isMapEntry) {
-        this.mapentry = isMapEntry;
+        this.builder.setOptions(DescriptorProtos.MessageOptions.newBuilder().setMapEntry(isMapEntry));
     }
 
     private RubyModule buildClassFromDescriptor(ThreadContext context) {
@@ -206,7 +206,6 @@ public class RubyDescriptor extends RubyObject {
 
     private IRubyObject name;
     private RubyModule klazz;
-    private boolean mapentry = false;
 
     private DescriptorProtos.DescriptorProto.Builder builder;
     private Descriptors.Descriptor descriptor;

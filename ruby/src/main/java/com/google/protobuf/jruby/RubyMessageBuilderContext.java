@@ -158,11 +158,8 @@ public class RubyMessageBuilderContext extends RubyObject {
         RubyDescriptor mapentryDesc = (RubyDescriptor) cDescriptor.newInstance(context, Block.NULL_BLOCK);
         IRubyObject mapentryDescName = RubySymbol.newSymbol(runtime, name).id2name(context);
         mapentryDesc.setName(context, mapentryDescName);
-
-        // The 'mapentry' attribute has no Ruby setter because we do not want the user
-        // attempting to DIY the setup below; we want to ensure that the fields are
-        // correct. So we reach into the msgdef here to set the bit manually.
         mapentryDesc.setMapEntry(true);
+
         //optional <type> key = 1;
         RubyFieldDescriptor keyField = (RubyFieldDescriptor) cFieldDescriptor.newInstance(context, Block.NULL_BLOCK);
         keyField.setName(context, runtime.newString("key"));

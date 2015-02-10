@@ -83,6 +83,7 @@ public class RubyMessage extends RubyObject {
                     if (!(key instanceof RubySymbol))
                         throw runtime.newTypeError("Expected symbols as hash keys in initialization map.");
                     final Descriptors.FieldDescriptor fieldDescriptor = findField(context, key);
+
                     if (fieldDescriptor.getType() == Descriptors.FieldDescriptor.Type.MESSAGE &&
                             fieldDescriptor.isRepeated() &&
                             fieldDescriptor.getMessageType().getOptions().getMapEntry()) {

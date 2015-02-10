@@ -539,7 +539,8 @@ public class RubyMessage extends RubyObject {
 
     protected IRubyObject setField(ThreadContext context, Descriptors.FieldDescriptor fieldDescriptor, IRubyObject value) {
         if (Utils.isMapEntry(fieldDescriptor)) {
-            this.maps.put(fieldDescriptor, (RubyMap) value);
+            RubyMap thisMap = (RubyMap) getField(context, fieldDescriptor);
+            thisMap.mergeIntoSelf(context, value);
         } else if (fieldDescriptor.isRepeated()) {
             checkRepeatedFieldType(context, value, fieldDescriptor);
             if (value instanceof RubyRepeatedField) {

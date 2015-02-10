@@ -150,15 +150,12 @@ public class RubyMap extends RubyObject {
      * have otherwise indicated that every element has equal value.
      */
     @JRubyMethod(name = "==")
-    public IRubyObject eql(ThreadContext context, IRubyObject _other) {
+    public IRubyObject eq(ThreadContext context, IRubyObject _other) {
         if (_other instanceof RubyHash)
             return toHash(context).op_equal(context, _other);
         RubyMap other = (RubyMap) _other;
         if (this == other) return context.runtime.getTrue();
-        if (this.keyType != other.keyType ||
-                this.valueType != other.valueType ||
-                this.valueTypeClass != other.valueTypeClass ||
-                this.table.size() != other.table.size())
+        if (!typeCompatible(other) || this.table.size() != other.table.size())
             return context.runtime.getFalse();
         for (IRubyObject key : table.keySet()) {
             if (! other.table.containsKey(key))
@@ -331,14 +328,19 @@ public class RubyMap extends RubyObject {
             });
         } else if (hashmap instanceof RubyMap) {
             RubyMap other = (RubyMap) hashmap;
-            if (this.keyType != other.keyType || this.valueType != other.valueType ||
-                    this.valueTypeClass != other.valueTypeClass) {
-                throw context.runtime.newArgumentError("Attempt to merge Map with mismatching types");
+            if (!typeCompatible(other)) {
+                throw context.runtime.newTypeError("Attempt to merge Map with mismatching types");
             }
         } else {
-            throw context.runtime.newArgumentError("Unknown type merging into Map");
+            throw context.runtime.newTypeError("Unknown type merging into Map");
         }
         return this;
+    }
+
+    protected boolean typeCompatible(RubyMap other) {
+        return this.keyType == other.keyType &&
+                this.valueType == other.valueType &&
+                this.valueTypeClass == other.valueTypeClass;
     }
 
     private RubyMap newThisType(ThreadContext context) {

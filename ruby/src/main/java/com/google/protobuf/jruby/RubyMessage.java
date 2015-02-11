@@ -322,9 +322,15 @@ public class RubyMessage extends RubyObject {
     }
 
     protected DynamicMessage build(ThreadContext context) {
-        for (Map.Entry<Descriptors.FieldDescriptor, RubyRepeatedField> entry : this.repeatedFields.entrySet()) {
-            Descriptors.FieldDescriptor fieldDescriptor = entry.getKey();
-            RubyRepeatedField repeatedField = entry.getValue();
+        for (Descriptors.FieldDescriptor fieldDescriptor : maps.keySet()) {
+            this.builder.clearField(fieldDescriptor);
+            RubyDescriptor mapDescriptor = (RubyDescriptor) getDescriptorForField(context, fieldDescriptor);
+            for (DynamicMessage kv : maps.get(fieldDescriptor).build(context, mapDescriptor)) {
+                this.builder.addRepeatedField(fieldDescriptor, kv);
+            }
+        }
+        for (Descriptors.FieldDescriptor fieldDescriptor : this.repeatedFields.keySet()) {
+            RubyRepeatedField repeatedField = repeatedFields.get(fieldDescriptor);
             this.builder.clearField(fieldDescriptor);
             for (int i = 0; i < repeatedField.size(); i++) {
                 Object item = convert(context, fieldDescriptor, repeatedField.get(i));
@@ -523,6 +529,17 @@ public class RubyMessage extends RubyObject {
             RubyMap map = maps.get(fieldDescriptor);
             if (map == null) {
                 map = newMapForField(context, fieldDescriptor);
+                int mapSize = this.builder.getRepeatedFieldCount(fieldDescriptor);
+                Descriptors.FieldDescriptor keyField = fieldDescriptor.getMessageType().findFieldByNumber(1);
+                Descriptors.FieldDescriptor valueField = fieldDescriptor.getMessageType().findFieldByNumber(2);
+                RubyDescriptor kvDescriptor = (RubyDescriptor) getDescriptorForField(context, fieldDescriptor);
+                RubyClass kvClass = (RubyClass) kvDescriptor.msgclass(context);
+                for (int i = 0; i < mapSize; i++) {
+                    RubyMessage kvMessage = (RubyMessage) kvClass.newInstance(context, Block.NULL_BLOCK);
+                    DynamicMessage message = (DynamicMessage) this.builder.getRepeatedField(fieldDescriptor, i);
+                    kvMessage.buildFrom(context, message);
+                    map.indexSet(context, kvMessage.getField(context, keyField), kvMessage.getField(context, valueField));
+                }
                 maps.put(fieldDescriptor, map);
             }
             return map;

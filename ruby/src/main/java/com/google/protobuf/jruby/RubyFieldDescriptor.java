@@ -222,5 +222,5 @@ public class RubyFieldDescriptor extends RubyObject {
     private DescriptorProtos.FieldDescriptorProto.Builder builder;
     private IRubyObject name;
     private IRubyObject subType;
-    private Descriptors.FieldDescriptor fieldDef;
+    protected Descriptors.FieldDescriptor fieldDef;
 }

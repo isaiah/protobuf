@@ -1,10 +1,12 @@
 package com.google.protobuf.jruby;
 
 import com.google.protobuf.Descriptors;
+import com.google.protobuf.DynamicMessage;
 import com.google.protobuf.MapEntry;
 import org.jruby.*;
 import org.jruby.anno.JRubyClass;
 import org.jruby.anno.JRubyMethod;
+import org.jruby.internal.runtime.methods.DynamicMethod;
 import org.jruby.runtime.Block;
 import org.jruby.runtime.ObjectAllocator;
 import org.jruby.runtime.ThreadContext;
@@ -13,7 +15,9 @@ import org.jruby.util.ByteList;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -181,8 +185,8 @@ public class RubyMap extends RubyObject {
      * representation computed by its own #inspect method.
      */
     @JRubyMethod
-    public IRubyObject inspect(ThreadContext context) {
-        return toHash(context).inspect();
+    public IRubyObject inspect() {
+        return toHash(getRuntime().getCurrentContext()).inspect();
     }
 
     /*
@@ -322,6 +326,20 @@ public class RubyMap extends RubyObject {
                 }
         }
         return newMap;
+    }
+
+    protected List<DynamicMessage> build(ThreadContext context, RubyDescriptor descriptor) {
+        List<DynamicMessage> list = new ArrayList<DynamicMessage>();
+        RubyClass rubyClass = (RubyClass) descriptor.msgclass(context);
+        Descriptors.FieldDescriptor keyField = descriptor.lookup("key").fieldDef;
+        Descriptors.FieldDescriptor valueField = descriptor.lookup("value").fieldDef;
+        for (IRubyObject key : table.keySet()) {
+            RubyMessage mapMessage = (RubyMessage) rubyClass.newInstance(context, Block.NULL_BLOCK);
+            mapMessage.setField(context, keyField, key);
+            mapMessage.setField(context, valueField, table.get(key));
+            list.add(mapMessage.build(context));
+        }
+        return list;
     }
 
     protected RubyMap mergeIntoSelf(final ThreadContext context, IRubyObject hashmap) {

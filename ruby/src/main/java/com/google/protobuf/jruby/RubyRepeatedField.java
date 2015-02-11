@@ -41,7 +41,7 @@ import org.jruby.runtime.ObjectAllocator;
 import org.jruby.runtime.ThreadContext;
 import org.jruby.runtime.builtin.IRubyObject;
 
-@JRubyClass(name = "RepeatedClass")
+@JRubyClass(name = "RepeatedClass", include = "Enumerable")
 public class RubyRepeatedField extends RubyObject {
     public static void createRubyRepeatedField(Ruby runtime) {
         RubyModule mProtobuf = runtime.getClassFromPath("Google::Protobuf");
@@ -53,6 +53,7 @@ public class RubyRepeatedField extends RubyObject {
                     }
                 });
         cRepeatedField.defineAnnotatedMethods(RubyRepeatedField.class);
+        cRepeatedField.includeModule(runtime.getEnumerable());
     }
 
     public RubyRepeatedField(Ruby runtime, RubyClass klazz) {

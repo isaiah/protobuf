@@ -185,26 +185,19 @@ public class RubyMessageBuilderContext extends RubyObject {
         return runtime.getNil();
     }
 
+    @JRubyMethod
+    public IRubyObject oneof(ThreadContext context, IRubyObject name) {
+        return this;
+    }
+
     private void msgdefAddField(ThreadContext context, String label, IRubyObject name,
                                 IRubyObject type, IRubyObject number, IRubyObject typeClass) {
-        Ruby runtime = context.runtime;
-        RubyFieldDescriptor fieldDef = (RubyFieldDescriptor) cFieldDescriptor.newInstance(context, Block.NULL_BLOCK);
-        fieldDef.setLabel(context, runtime.newString(label));
-        fieldDef.setName(context, name);
-        fieldDef.setType(context, type);
-        fieldDef.setNumber(context, number);
-
-        if (!typeClass.isNil()) {
-            if (!(typeClass instanceof RubyString)) {
-                throw runtime.newArgumentError("expected string for type class");
-            }
-            fieldDef.setSubmsgName(context, typeClass);
-        }
-        descriptor.addField(context, fieldDef);
+        Utils.msgdefAddField(context, descriptor, label, name, type, number, typeClass, cFieldDescriptor);
     }
 
     private RubyDescriptor descriptor;
     private RubyBuilder builder;
     private RubyClass cFieldDescriptor;
+    private RubyClass cOneofDescriptor;
     private RubyClass cDescriptor;
 }

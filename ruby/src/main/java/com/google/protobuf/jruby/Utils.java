@@ -40,6 +40,7 @@ import org.jcodings.specific.ASCIIEncoding;
 import org.jcodings.specific.USASCIIEncoding;
 import org.jcodings.specific.UTF8Encoding;
 import org.jruby.*;
+import org.jruby.runtime.Block;
 import org.jruby.runtime.ThreadContext;
 import org.jruby.runtime.builtin.IRubyObject;
 
@@ -226,6 +227,24 @@ public class Utils {
         return fieldDescriptor.getType() == Descriptors.FieldDescriptor.Type.MESSAGE &&
                 fieldDescriptor.isRepeated() &&
                 fieldDescriptor.getMessageType().getOptions().getMapEntry();
+    }
+
+    public static void msgdefAddField(ThreadContext context, RubyDescriptor descriptor, String label, IRubyObject name,
+                                      IRubyObject type, IRubyObject number, IRubyObject typeClass, RubyClass cFieldDescriptor) {
+        Ruby runtime = context.runtime;
+        RubyFieldDescriptor fieldDef = (RubyFieldDescriptor) cFieldDescriptor.newInstance(context, Block.NULL_BLOCK);
+        fieldDef.setLabel(context, runtime.newString(label));
+        fieldDef.setName(context, name);
+        fieldDef.setType(context, type);
+        fieldDef.setNumber(context, number);
+
+        if (!typeClass.isNil()) {
+            if (!(typeClass instanceof RubyString)) {
+                throw runtime.newArgumentError("expected string for type class");
+            }
+            fieldDef.setSubmsgName(context, typeClass);
+        }
+        descriptor.addField(context, fieldDef);
     }
 
     protected static void checkIntTypePrecision(ThreadContext context, Descriptors.FieldDescriptor.Type type, IRubyObject value) {

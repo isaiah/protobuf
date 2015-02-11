@@ -75,9 +75,6 @@ module BasicTest
       optional :value, :message, 2, "TestMessage2"
     end
 
-    # different context
-    # TODO map support
-    unless RUBY_PLATFORM == "java"
     add_message "OneofMessage" do
       oneof :my_oneof do
         optional :a, :string, 1
@@ -86,7 +83,6 @@ module BasicTest
         optional :d, :enum, 4, "TestEnum"
       end
     end
-  end # unless jruby?
   end
 
   TestMessage = pool.lookup("TestMessage").msgclass
@@ -101,10 +97,7 @@ module BasicTest
     pool.lookup("MapMessageWireEquiv_entry1").msgclass
   MapMessageWireEquiv_entry2 =
     pool.lookup("MapMessageWireEquiv_entry2").msgclass
-  # TODO TBD
-  unless RUBY_PLATFORM == "java"
   OneofMessage = pool.lookup("OneofMessage").msgclass
-  end # unless jruby?
 
 # ------------ test cases ---------------
 

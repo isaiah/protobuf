@@ -121,6 +121,7 @@ public class RubyDescriptorPool extends RubyObject {
     private void buildFileDescriptor(ThreadContext context) {
         Ruby runtime = context.runtime;
         try {
+            this.builder.setSyntax("proto3");
             final Descriptors.FileDescriptor fileDescriptor = Descriptors.FileDescriptor.buildFrom(
                     this.builder.build(), new Descriptors.FileDescriptor[]{});
 

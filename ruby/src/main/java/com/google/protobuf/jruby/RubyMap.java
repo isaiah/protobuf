@@ -118,6 +118,12 @@ public class RubyMap extends RubyObject {
     public IRubyObject indexSet(ThreadContext context, IRubyObject key, IRubyObject value) {
         Utils.checkType(context, keyType, key, (RubyModule) valueTypeClass);
         Utils.checkType(context, valueType, value, (RubyModule) valueTypeClass);
+        IRubyObject symbol;
+        if (valueType == Descriptors.FieldDescriptor.Type.ENUM &&
+                Utils.isRubyNum(value) &&
+                ! (symbol = RubyEnum.lookup(context, valueTypeClass, value)).isNil()) {
+            value = symbol;
+        }
         this.table.put(key, value);
         return value;
     }

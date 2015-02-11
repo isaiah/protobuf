@@ -513,7 +513,7 @@ module BasicTest
       assert m.length == 3
       assert m["z"] == :C
       m["z"] = 2
-      assert m["z"] == :B
+      assert_equal m["z"], :B
       m["z"] = 4
       assert m["z"] == 4
       assert_raise RangeError do

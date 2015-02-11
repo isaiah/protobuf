@@ -574,9 +574,9 @@ module BasicTest
       assert_raise TypeError do
         m.map_string_int32 = Google::Protobuf::Map.new(:string, :int64)
       end
-      #assert_raise TypeError do
-      #  m.map_string_int32 = {}
-      #end
+      assert_raise TypeError do
+        m.map_string_int32 = {}
+      end
 
       assert_raise TypeError do
         m = MapMessage.new(:map_string_int32 => { 1 => "I am not a number" })

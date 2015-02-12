@@ -8,9 +8,13 @@ import org.jruby.RubyModule;
 import org.jruby.RubyObject;
 import org.jruby.anno.JRubyClass;
 import org.jruby.anno.JRubyMethod;
+import org.jruby.runtime.Block;
 import org.jruby.runtime.ObjectAllocator;
 import org.jruby.runtime.ThreadContext;
 import org.jruby.runtime.builtin.IRubyObject;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @JRubyClass(name = "OneofDescriptor", include = "Enumerable")
 public class RubyOneofDescriptor extends RubyObject {
@@ -34,6 +38,7 @@ public class RubyOneofDescriptor extends RubyObject {
     @JRubyMethod
     public IRubyObject initialize(ThreadContext context) {
         builder = DescriptorProtos.OneofDescriptorProto.newBuilder();
+        fields = new ArrayList<RubyFieldDescriptor>();
         return this;
     }
 
@@ -57,7 +62,9 @@ public class RubyOneofDescriptor extends RubyObject {
      */
     @JRubyMethod(name = "name=")
     public IRubyObject setName(ThreadContext context, IRubyObject name) {
-        this.name = context.runtime.newString(name.asJavaString());
+        String strName = name.asJavaString();
+        builder.setName(strName);
+        this.name = context.runtime.newString(strName);
         return context.runtime.getNil();
     }
 
@@ -78,15 +85,40 @@ public class RubyOneofDescriptor extends RubyObject {
     @JRubyMethod(name = "add_field")
     public IRubyObject addField(ThreadContext context, IRubyObject obj) {
         RubyFieldDescriptor fieldDescriptor = (RubyFieldDescriptor) obj;
-//        builder.addRepeatedField(fieldDescriptor.fieldDef, )
+        fields.add(fieldDescriptor);
         return context.runtime.getNil();
     }
 
+    /*
+     * call-seq:
+     *     OneofDescriptor.each(&block) => nil
+     *
+     * Iterates through fields in this oneof, yielding to the block on each one.
+     */
+    @JRubyMethod
+    public IRubyObject each(ThreadContext context, Block block) {
+        for (RubyFieldDescriptor field : fields) {
+            block.yieldSpecific(context, field);
+        }
+        return context.runtime.getNil();
+    }
 
-    public DescriptorProtos.OneofDescriptorProto build() {
+    public DescriptorProtos.OneofDescriptorProto build(int index) {
+        for (RubyFieldDescriptor field : fields) {
+            field.setOneofIndex(index);
+        }
         return this.builder.build();
+    }
+
+    protected Descriptors.FieldDescriptor getValueField() {
+        getRuntime().getOutputStream().println(valueField);
+        if (valueField < 0)
+            return null;
+        return fields.get(valueField).fieldDef;
     }
 
     private IRubyObject name;
     private DescriptorProtos.OneofDescriptorProto.Builder builder;
+    private List<RubyFieldDescriptor> fields;
+    private int valueField = -1;
 }

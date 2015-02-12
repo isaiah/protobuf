@@ -525,6 +525,18 @@ public class RubyMessage extends RubyObject {
     }
 
     protected IRubyObject getField(ThreadContext context, Descriptors.FieldDescriptor fieldDescriptor) {
+        if (fieldDescriptor.getContainingOneof() != null) {
+            Descriptors.OneofDescriptor oneofDescriptor = fieldDescriptor.getContainingOneof();
+            RubyDescriptor rubyDescriptor = (RubyDescriptor) getDescriptor(context, metaClass);
+            RubyOneofDescriptor rubyOneofDescriptor = rubyDescriptor.lookupOneof(oneofDescriptor.getName());
+            Descriptors.FieldDescriptor valueField = rubyOneofDescriptor.getValueField();
+            if (valueField == null || valueField != fieldDescriptor) {
+                return context.runtime.getNil();
+            }
+            return wrapField(context, fieldDescriptor,
+                    builder.getField(fieldDescriptor));
+        }
+
         if (Utils.isMapEntry(fieldDescriptor)) {
             RubyMap map = maps.get(fieldDescriptor);
             if (map == null) {

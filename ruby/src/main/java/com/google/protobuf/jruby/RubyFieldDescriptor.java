@@ -215,6 +215,10 @@ public class RubyFieldDescriptor extends RubyObject {
         this.fieldDef = fieldDescriptor;
     }
 
+    protected void setOneofIndex(int index) {
+        this.builder.setOneofIndex(index);
+    }
+
     protected DescriptorProtos.FieldDescriptorProto.Builder getFieldDef() {
         return this.builder;
     }

@@ -179,7 +179,7 @@ public class RubyDescriptor extends RubyObject {
     @JRubyMethod(name = "add_oneof")
     public IRubyObject addOneof(ThreadContext context, IRubyObject obj) {
         RubyOneofDescriptor def = (RubyOneofDescriptor) obj;
-        DescriptorProtos.OneofDescriptorProto descriptorProto = def.build();
+        DescriptorProtos.OneofDescriptorProto descriptorProto = def.build(builder.getOneofDeclCount());
         builder.addOneofDecl(descriptorProto);
         oneofDefs.put(def.getName(context).asJavaString(), def);
         return context.runtime.getNil();
@@ -251,6 +251,10 @@ public class RubyDescriptor extends RubyObject {
 
     protected RubyFieldDescriptor lookup(String fieldName) {
         return fieldDefMap.get(Utils.unescapeIdentifier(fieldName));
+    }
+
+    protected RubyOneofDescriptor lookupOneof(String name) {
+        return oneofDefs.get(name);
     }
 
     private IRubyObject name;

@@ -607,10 +607,10 @@ module BasicTest
       oneof_count = 0
       d.each_oneof{ |oneof|
         oneof_count += 1
-        assert_equal oneof, o
+        assert oneof == o
       }
       assert oneof_count == 1
-      assert o.count == 4
+      assert_equal o.count, 4
       field_names = o.map{|f| f.name}.sort
       assert field_names == ["a", "b", "c", "d"]
     end

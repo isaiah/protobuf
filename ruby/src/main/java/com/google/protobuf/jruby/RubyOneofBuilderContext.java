@@ -76,6 +76,7 @@ public class RubyOneofBuilderContext extends RubyObject {
         IRubyObject typeClass = args.length > 3 ? args[3] : context.runtime.getNil();
         RubyFieldDescriptor fieldDescriptor = Utils.msgdefCreateField(context, "optional",
                 name, type, number, typeClass, cFieldDescriptor);
+        descriptor.addField(context, fieldDescriptor);
         this.builder.addField(context, fieldDescriptor);
         return this;
     }

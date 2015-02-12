@@ -36,6 +36,7 @@ import com.google.protobuf.Descriptors;
 import org.jruby.*;
 import org.jruby.anno.JRubyClass;
 import org.jruby.anno.JRubyMethod;
+import org.jruby.runtime.Binding;
 import org.jruby.runtime.Block;
 import org.jruby.runtime.ObjectAllocator;
 import org.jruby.runtime.ThreadContext;
@@ -62,6 +63,8 @@ public class RubyMessageBuilderContext extends RubyObject {
     public IRubyObject initialize(ThreadContext context, IRubyObject descriptor, IRubyObject rubyBuilder) {
         this.cFieldDescriptor = (RubyClass) context.runtime.getClassFromPath("Google::Protobuf::FieldDescriptor");
         this.cDescriptor = (RubyClass) context.runtime.getClassFromPath("Google::Protobuf::Descriptor");
+        this.cOneofDescriptor = (RubyClass) context.runtime.getClassFromPath("Google::Protobuf::OneofDescriptor");
+        this.cOneofBuilderContext = (RubyClass) context.runtime.getClassFromPath("Google::Protobuf::Internal::OneofBuilderContext");
         this.descriptor = (RubyDescriptor) descriptor;
         this.builder = (RubyBuilder) rubyBuilder;
         return this;
@@ -186,18 +189,29 @@ public class RubyMessageBuilderContext extends RubyObject {
     }
 
     @JRubyMethod
-    public IRubyObject oneof(ThreadContext context, IRubyObject name) {
-        return this;
+    public IRubyObject oneof(ThreadContext context, IRubyObject name, Block block) {
+        RubyOneofDescriptor oneofdef = (RubyOneofDescriptor)
+                cOneofDescriptor.newInstance(context, Block.NULL_BLOCK);
+        RubyOneofBuilderContext ctx = (RubyOneofBuilderContext)
+                cOneofBuilderContext.newInstance(context, oneofdef, descriptor, Block.NULL_BLOCK);
+        oneofdef.setName(context, name);
+        Binding binding = block.getBinding();
+        binding.setSelf(ctx);
+        block.yieldSpecific(context);
+        descriptor.addOneof(context, oneofdef);
+        return context.runtime.getNil();
     }
 
     private void msgdefAddField(ThreadContext context, String label, IRubyObject name,
                                 IRubyObject type, IRubyObject number, IRubyObject typeClass) {
-        Utils.msgdefAddField(context, descriptor, label, name, type, number, typeClass, cFieldDescriptor);
+        descriptor.addField(context,
+                Utils.msgdefCreateField(context, label, name, type, number, typeClass, cFieldDescriptor));
     }
 
     private RubyDescriptor descriptor;
     private RubyBuilder builder;
     private RubyClass cFieldDescriptor;
     private RubyClass cOneofDescriptor;
+    private RubyClass cOneofBuilderContext;
     private RubyClass cDescriptor;
 }

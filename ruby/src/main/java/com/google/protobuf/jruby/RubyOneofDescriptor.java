@@ -1,5 +1,7 @@
 package com.google.protobuf.jruby;
 
+import com.google.protobuf.DescriptorProtos;
+import com.google.protobuf.Descriptors;
 import org.jruby.Ruby;
 import org.jruby.RubyClass;
 import org.jruby.RubyModule;
@@ -31,19 +33,60 @@ public class RubyOneofDescriptor extends RubyObject {
 
     @JRubyMethod
     public IRubyObject initialize(ThreadContext context) {
+        builder = DescriptorProtos.OneofDescriptorProto.newBuilder();
         return this;
     }
 
-    @JRubyMethod
-    public IRubyObject name(ThreadContext context) {
+    /*
+     * call-seq:
+     *     OneofDescriptor.name => name
+     *
+     * Returns the name of this oneof.
+     */
+    @JRubyMethod(name = "name")
+    public IRubyObject getName(ThreadContext context) {
         return name;
     }
 
+    /*
+     * call-seq:
+     *     OneofDescriptor.name = name
+     *
+     * Sets a new name for this oneof. The oneof must not have been added to a
+     * message descriptor yet.
+     */
     @JRubyMethod(name = "name=")
     public IRubyObject setName(ThreadContext context, IRubyObject name) {
-        this.name = name;
+        this.name = context.runtime.newString(name.asJavaString());
         return context.runtime.getNil();
     }
 
+    /*
+     * call-seq:
+     *     OneofDescriptor.add_field(field) => nil
+     *
+     * Adds a field to this oneof. The field may have been added to this oneof in
+     * the past, or the message to which this oneof belongs (if any), but may not
+     * have already been added to any other oneof or message. Otherwise, an
+     * exception is raised.
+     *
+     * All fields added to the oneof via this method will be automatically added to
+     * the message to which this oneof belongs, if it belongs to one currently, or
+     * else will be added to any message to which the oneof is later added at the
+     * time that it is added.
+     */
+    @JRubyMethod(name = "add_field")
+    public IRubyObject addField(ThreadContext context, IRubyObject obj) {
+        RubyFieldDescriptor fieldDescriptor = (RubyFieldDescriptor) obj;
+//        builder.addRepeatedField(fieldDescriptor.fieldDef, )
+        return context.runtime.getNil();
+    }
+
+
+    public DescriptorProtos.OneofDescriptorProto build() {
+        return this.builder.build();
+    }
+
     private IRubyObject name;
+    private DescriptorProtos.OneofDescriptorProto.Builder builder;
 }

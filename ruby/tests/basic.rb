@@ -598,17 +598,16 @@ module BasicTest
     end
 
     # TODO not implemented
-    unless RUBY_PLATFORM == "java"
     def test_oneof_descriptors
       d = OneofMessage.descriptor
       o = d.lookup_oneof("my_oneof")
       assert o != nil
       assert o.class == Google::Protobuf::OneofDescriptor
-      assert o.name == "my_oneof"
+      assert_equal o.name, "my_oneof"
       oneof_count = 0
       d.each_oneof{ |oneof|
         oneof_count += 1
-        assert oneof == o
+        assert_equal oneof, o
       }
       assert oneof_count == 1
       assert o.count == 4
@@ -618,7 +617,7 @@ module BasicTest
 
     def test_oneof
       d = OneofMessage.new
-      assert d.a == nil
+      assert_equal d.a, nil
       assert d.b == nil
       assert d.c == nil
       assert d.d == nil
@@ -683,7 +682,6 @@ module BasicTest
       assert OneofMessage.encode(d5) == ''
       assert d5.my_oneof == nil
     end
-    end # unless jruby?
 
     def test_enum_field
       m = TestMessage.new

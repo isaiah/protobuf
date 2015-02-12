@@ -46,7 +46,8 @@ import org.jruby.runtime.builtin.IRubyObject;
 public class RubyOneofBuilderContext extends RubyObject {
     public static void createRubyOneofBuilderContext(Ruby runtime) {
         RubyModule protobuf = runtime.getClassFromPath("Google::Protobuf");
-        RubyClass cRubyOneofBuidlerContext = protobuf.defineClassUnder("OneofBuilderContext", runtime.getObject(), new ObjectAllocator() {
+        RubyModule internal = protobuf.defineModuleUnder("Internal");
+        RubyClass cRubyOneofBuidlerContext = internal.defineClassUnder("OneofBuilderContext", runtime.getObject(), new ObjectAllocator() {
             @Override
             public IRubyObject allocate(Ruby ruby, RubyClass rubyClass) {
                 return new RubyOneofBuilderContext(ruby, rubyClass);
@@ -61,8 +62,9 @@ public class RubyOneofBuilderContext extends RubyObject {
 
     @JRubyMethod
     public IRubyObject initialize(ThreadContext context, IRubyObject oneofdef, IRubyObject builder) {
-        this.descriptor = (RubyDescriptor) oneofdef;
-        this.builder = (RubyBuilder) builder;
+        this.descriptor = (RubyOneofDescriptor) oneofdef;
+        this.builder = (RubyDescriptor) builder;
+        this.cFieldDescriptor = (RubyClass) context.runtime.getClassFromPath("Google::Protobuf::FieldDescriptor");
         return this;
     }
 
@@ -72,11 +74,13 @@ public class RubyOneofBuilderContext extends RubyObject {
         IRubyObject type = args[1];
         IRubyObject number = args[2];
         IRubyObject typeClass = args.length > 3 ? args[3] : context.runtime.getNil();
-        Utils.msgdefAddField(context, descriptor, "optional", name, type, number, typeClass,
-                (RubyClass) context.runtime.getClassFromPath("Google::Protobuf::FieldDescriptor"));
+        RubyFieldDescriptor fieldDescriptor = Utils.msgdefCreateField(context, "optional",
+                name, type, number, typeClass, cFieldDescriptor);
+        this.builder.addField(context, fieldDescriptor);
         return this;
     }
 
-    private RubyBuilder builder;
-    private RubyDescriptor descriptor;
+    private RubyDescriptor builder;
+    private RubyOneofDescriptor descriptor;
+    private RubyClass cFieldDescriptor;
 }

@@ -229,7 +229,7 @@ public class Utils {
                 fieldDescriptor.getMessageType().getOptions().getMapEntry();
     }
 
-    public static void msgdefAddField(ThreadContext context, RubyDescriptor descriptor, String label, IRubyObject name,
+    public static RubyFieldDescriptor msgdefCreateField(ThreadContext context, String label, IRubyObject name,
                                       IRubyObject type, IRubyObject number, IRubyObject typeClass, RubyClass cFieldDescriptor) {
         Ruby runtime = context.runtime;
         RubyFieldDescriptor fieldDef = (RubyFieldDescriptor) cFieldDescriptor.newInstance(context, Block.NULL_BLOCK);
@@ -244,7 +244,7 @@ public class Utils {
             }
             fieldDef.setSubmsgName(context, typeClass);
         }
-        descriptor.addField(context, fieldDef);
+        return fieldDef;
     }
 
     protected static void checkIntTypePrecision(ThreadContext context, Descriptors.FieldDescriptor.Type type, IRubyObject value) {

@@ -77,6 +77,7 @@ public class RubyDescriptor extends RubyObject {
     public IRubyObject initialize(ThreadContext context) {
         this.builder = DescriptorProtos.DescriptorProto.newBuilder();
         this.fieldDefMap = new HashMap<String, RubyFieldDescriptor>();
+        this.oneofDefs = new HashMap<String, RubyOneofDescriptor>();
         return this;
     }
 
@@ -164,6 +165,54 @@ public class RubyDescriptor extends RubyObject {
         return context.runtime.getNil();
     }
 
+    /*
+     * call-seq:
+     *     Descriptor.add_oneof(oneof) => nil
+     *
+     * Adds the given OneofDescriptor to this message type. This descriptor must not
+     * have been added to a pool yet. Raises an exception if a oneof with the same
+     * name already exists, or if any of the oneof's fields' names or numbers
+     * conflict with an existing field in this message type. All fields in the oneof
+     * are added to the message descriptor. Sub-type references (e.g. for fields of
+     * type message) are not resolved at this point.
+     */
+    @JRubyMethod(name = "add_oneof")
+    public IRubyObject addOneof(ThreadContext context, IRubyObject obj) {
+        RubyOneofDescriptor def = (RubyOneofDescriptor) obj;
+        DescriptorProtos.OneofDescriptorProto descriptorProto = def.build();
+        builder.addOneofDecl(descriptorProto);
+        oneofDefs.put(def.getName(context).asJavaString(), def);
+        return context.runtime.getNil();
+    }
+
+    /*
+     * call-seq:
+     *     Descriptor.each_oneof(&block) => nil
+     *
+     * Invokes the given block for each oneof in this message type, passing the
+     * corresponding OneofDescriptor.
+     */
+    @JRubyMethod(name = "each_oneof")
+    public IRubyObject eachOneof(ThreadContext context, Block block) {
+        for (DescriptorProtos.OneofDescriptorProto oneofDescriptor : this.builder.getOneofDeclList()) {
+            block.yieldSpecific(context, oneofDefs.get(oneofDescriptor.getName()));
+        }
+        return context.runtime.getNil();
+    }
+
+    /*
+     * call-seq:
+     *     Descriptor.lookup_oneof(name) => OneofDescriptor
+     *
+     * Returns the oneof descriptor for the oneof with the given name, if present,
+     * or nil if none.
+     */
+    @JRubyMethod(name = "lookup_oneof")
+    public IRubyObject lookupOneof(ThreadContext context, IRubyObject name) {
+        return oneofDefs.containsKey(name.asJavaString()) ? oneofDefs.get(name.asJavaString())
+                : context.runtime.getNil();
+    }
+
     public void setDescriptor(Descriptors.Descriptor descriptor) {
         this.descriptor = descriptor;
     }
@@ -210,4 +259,5 @@ public class RubyDescriptor extends RubyObject {
     private DescriptorProtos.DescriptorProto.Builder builder;
     private Descriptors.Descriptor descriptor;
     private Map<String, RubyFieldDescriptor> fieldDefMap;
+    private Map<String, RubyOneofDescriptor> oneofDefs;
 }

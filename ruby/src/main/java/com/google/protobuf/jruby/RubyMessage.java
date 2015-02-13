@@ -211,6 +211,14 @@ public class RubyMessage extends RubyObject {
     @JRubyMethod(name = "method_missing", rest = true)
     public IRubyObject methodMissing(ThreadContext context, IRubyObject[] args) {
         if (args.length == 1) {
+            RubyDescriptor rubyDescriptor = (RubyDescriptor) getDescriptor(context, metaClass);
+            IRubyObject oneofDescriptor = rubyDescriptor.lookupOneof(context, args[0]);
+            if (!oneofDescriptor.isNil()) {
+                if (oneofCase == ONEOF_CASE_NONE)
+                    return context.runtime.getNil();
+                RubyOneofDescriptor rubyOneofDescriptor = (RubyOneofDescriptor) oneofDescriptor;
+                return ((RubyString) rubyOneofDescriptor.lookupField(oneofCase).getName(context)).intern();
+            }
             return this.index(context, args[0]);
         } else {
             // fieldName is RubySymbol
@@ -525,12 +533,8 @@ public class RubyMessage extends RubyObject {
     }
 
     protected IRubyObject getField(ThreadContext context, Descriptors.FieldDescriptor fieldDescriptor) {
-        if (fieldDescriptor.getContainingOneof() != null) {
-            Descriptors.OneofDescriptor oneofDescriptor = fieldDescriptor.getContainingOneof();
-            RubyDescriptor rubyDescriptor = (RubyDescriptor) getDescriptor(context, metaClass);
-            RubyOneofDescriptor rubyOneofDescriptor = rubyDescriptor.lookupOneof(oneofDescriptor.getName());
-            Descriptors.FieldDescriptor valueField = rubyOneofDescriptor.getValueField();
-            if (valueField == null || valueField != fieldDescriptor) {
+        if (isOneofField(context, fieldDescriptor)) {
+            if (oneofCase != fieldDescriptor.getNumber()) {
                 return context.runtime.getNil();
             }
             return wrapField(context, fieldDescriptor,
@@ -632,10 +636,19 @@ public class RubyMessage extends RubyObject {
         }
     }
 
+    private boolean isOneofField(ThreadContext context, Descriptors.FieldDescriptor fieldDescriptor) {
+        RubyDescriptor rubyDescriptor = (RubyDescriptor) getDescriptor(context, metaClass);
+        RubyFieldDescriptor rubyFieldDescriptor = rubyDescriptor.lookup(fieldDescriptor.getName());
+        return ! rubyDescriptor.lookupOneof(context, rubyFieldDescriptor.getOneofName()).isNil();
+    }
+
     private Descriptors.Descriptor descriptor;
     private DynamicMessage.Builder builder;
     private RubyClass cRepeatedField;
     private RubyClass cMap;
     private Map<Descriptors.FieldDescriptor, RubyRepeatedField> repeatedFields;
     private Map<Descriptors.FieldDescriptor, RubyMap> maps;
+    private int oneofCase = ONEOF_CASE_NONE;
+
+    private static int ONEOF_CASE_NONE = 0;
 }

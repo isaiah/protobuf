@@ -77,7 +77,7 @@ public class RubyDescriptor extends RubyObject {
     public IRubyObject initialize(ThreadContext context) {
         this.builder = DescriptorProtos.DescriptorProto.newBuilder();
         this.fieldDefMap = new HashMap<String, RubyFieldDescriptor>();
-        this.oneofDefs = new HashMap<String, RubyOneofDescriptor>();
+        this.oneofDefs = new HashMap<IRubyObject, RubyOneofDescriptor>();
         return this;
     }
 
@@ -179,9 +179,9 @@ public class RubyDescriptor extends RubyObject {
     @JRubyMethod(name = "add_oneof")
     public IRubyObject addOneof(ThreadContext context, IRubyObject obj) {
         RubyOneofDescriptor def = (RubyOneofDescriptor) obj;
-        DescriptorProtos.OneofDescriptorProto descriptorProto = def.build(builder.getOneofDeclCount());
-        builder.addOneofDecl(descriptorProto);
-        oneofDefs.put(def.getName(context).asJavaString(), def);
+        // XXX useless, don't know why the final descriptor doesn't contain the added oneofs
+        builder.addOneofDecl(def.build());
+        oneofDefs.put(def.getName(context), def);
         return context.runtime.getNil();
     }
 
@@ -194,8 +194,8 @@ public class RubyDescriptor extends RubyObject {
      */
     @JRubyMethod(name = "each_oneof")
     public IRubyObject eachOneof(ThreadContext context, Block block) {
-        for (DescriptorProtos.OneofDescriptorProto oneofDescriptor : this.builder.getOneofDeclList()) {
-            block.yieldSpecific(context, oneofDefs.get(oneofDescriptor.getName()));
+        for (RubyOneofDescriptor oneofDescriptor : oneofDefs.values()) {
+            block.yieldSpecific(context, oneofDescriptor);
         }
         return context.runtime.getNil();
     }
@@ -209,8 +209,9 @@ public class RubyDescriptor extends RubyObject {
      */
     @JRubyMethod(name = "lookup_oneof")
     public IRubyObject lookupOneof(ThreadContext context, IRubyObject name) {
-        return oneofDefs.containsKey(name.asJavaString()) ? oneofDefs.get(name.asJavaString())
-                : context.runtime.getNil();
+        if (name instanceof RubySymbol)
+            name = context.runtime.newString(name.asJavaString());
+        return oneofDefs.containsKey(name) ? oneofDefs.get(name) : context.runtime.getNil();
     }
 
     public void setDescriptor(Descriptors.Descriptor descriptor) {
@@ -253,15 +254,11 @@ public class RubyDescriptor extends RubyObject {
         return fieldDefMap.get(Utils.unescapeIdentifier(fieldName));
     }
 
-    protected RubyOneofDescriptor lookupOneof(String name) {
-        return oneofDefs.get(name);
-    }
-
     private IRubyObject name;
     private RubyModule klazz;
 
     private DescriptorProtos.DescriptorProto.Builder builder;
     private Descriptors.Descriptor descriptor;
     private Map<String, RubyFieldDescriptor> fieldDefMap;
-    private Map<String, RubyOneofDescriptor> oneofDefs;
+    private Map<IRubyObject, RubyOneofDescriptor> oneofDefs;
 }
